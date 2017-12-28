@@ -9,56 +9,56 @@
            <Col>
                 <Card>
                     <Button type="primary" @click="showModal = true" >新建</Button>
-                    <Modal v-model="showModal" title="新建用户">
+                    <Modal v-model="showModal" @on-ok="createNew" title="新建用户">
                             <Form :model="formItem" :label-width="80">
-        <FormItem label="用户名">
-            <Input v-model="formItem.username" placeholder="名称"></Input>
-        </FormItem>
-        <FormItem label="邮箱">
-            <Input v-model="formItem.email" placeholder="邮箱"></Input>
-        </FormItem>
-        <FormItem label="手机">
-            <Input v-model="formItem.mobile" placeholder="手机"></Input>
-        </FormItem>
-        <FormItem label="密码">
-            <Input v-model="formItem.password" placeholder="密码"></Input>
-        </FormItem>
-        <FormItem label="所属部门">
-            <Select v-model="formItem.select">
-                <Option value="beijing">New York</Option>
-                <Option value="shanghai">London</Option>
-                <Option value="shenzhen">Sydney</Option>
-            </Select>
-        </FormItem>
-        <FormItem label="状态">
-            <RadioGroup v-model="formItem.status">
-                <Radio label="0">未激活</Radio>
-                <Radio label="1">激活</Radio>
-                <Radio label="2">锁定</Radio>
-            </RadioGroup>
-        </FormItem>
-        <FormItem label="角色">
-            <CheckboxGroup v-model="formItem.checkbox">
-                <Checkbox label="Eat">管理员</Checkbox>
-                <Checkbox label="Sleep">用户</Checkbox>
-                <Checkbox label="Run">部门经理</Checkbox>
-                <Checkbox label="Movie">临时用户</Checkbox>
-            </CheckboxGroup>
-        </FormItem>
-        <FormItem label="启用">
-            <i-switch v-model="formItem.switch" size="large">
-                <span slot="open">启用</span>
-                <span slot="close">关闭</span>
-            </i-switch>
-        </FormItem>
-        <FormItem label="备注">
-            <Input v-model="formItem.comment" type="textarea" :autosize="{minRows: 2,maxRows: 5}" placeholder="备注"></Input>
-        </FormItem>
-        <!-- <FormItem>
-            <Button type="primary">Submit</Button>
-            <Button type="ghost" style="margin-left: 8px">Cancel</Button>
-        </FormItem> -->
-    </Form>
+                              <FormItem label="用户名">
+                                  <Input v-model="formItem.username" placeholder="名称"></Input>
+                              </FormItem>
+                              <FormItem label="邮箱">
+                                  <Input v-model="formItem.email" placeholder="邮箱"></Input>
+                              </FormItem>
+                              <FormItem label="手机">
+                                  <Input v-model="formItem.mobile" placeholder="手机"></Input>
+                              </FormItem>
+                              <FormItem label="密码">
+                                  <Input v-model="formItem.password" placeholder="密码"></Input>
+                              </FormItem>
+                              <FormItem label="所属部门">
+                                  <Select v-model="formItem.select">
+                                      <Option value="beijing">New York</Option>
+                                      <Option value="shanghai">London</Option>
+                                      <Option value="shenzhen">Sydney</Option>
+                                  </Select>
+                              </FormItem>
+                              <FormItem label="状态">
+                                  <RadioGroup v-model="formItem.status">
+                                      <Radio label="0">未激活</Radio>
+                                      <Radio label="1">激活</Radio>
+                                      <Radio label="2">锁定</Radio>
+                                  </RadioGroup>
+                              </FormItem>
+                              <FormItem label="角色">
+                                  <CheckboxGroup v-model="formItem.checkbox">
+                                      <Checkbox label="Eat">管理员</Checkbox>
+                                      <Checkbox label="Sleep">用户</Checkbox>
+                                      <Checkbox label="Run">部门经理</Checkbox>
+                                      <Checkbox label="Movie">临时用户</Checkbox>
+                                  </CheckboxGroup>
+                              </FormItem>
+                              <FormItem label="启用">
+                                  <i-switch v-model="formItem.switch" size="large">
+                                      <span slot="open">启用</span>
+                                      <span slot="close">关闭</span>
+                                  </i-switch>
+                              </FormItem>
+                              <FormItem label="备注">
+                                  <Input v-model="formItem.comment" type="textarea" :autosize="{minRows: 2,maxRows: 5}" placeholder="备注"></Input>
+                              </FormItem>
+                              <!-- <FormItem>
+                                  <Button type="primary">Submit</Button>
+                                  <Button type="ghost" style="margin-left: 8px">Cancel</Button>
+                              </FormItem> -->
+                          </Form>
                     </Modal>
                     <Button type="error" @click="showModal = true" >批量删除</Button>
                     <Input v-model="keyword" placeholder="按名称搜索" style="width: 200px"></Input>
@@ -87,9 +87,9 @@ export default {
       showModal: false,
       formItem: {
         username: "",
-        email:"",
-        mobile:"",
-        password:"",
+        email: "",
+        mobile: "",
+        password: "",
         select: "",
         status: "0",
         checkbox: [],
@@ -140,6 +140,23 @@ export default {
           console.log(response);
           if (response.data) {
             that.tableData = response.data.list;
+          }
+        })
+        .catch(function(error) {
+          console.log(error);
+        });
+    },
+    createNew() {
+      console.log(this.formItem)
+      let that=this;
+      let urlStr = "/sysUser";
+      axios
+        .post(urlStr, this.formItem)
+        .then(function(response) {
+          console.log(response);
+          if (response.data.code == 0) {
+             that.getData();
+          } else {
           }
         })
         .catch(function(error) {
