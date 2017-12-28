@@ -15,14 +15,14 @@
                     <Form ref="loginForm" :model="form" :rules="rules">
                         <FormItem prop="userName">
                             <Input v-model="form.userName" placeholder="请输入用户名">
-                            <span slot="prepend">
+                                <span slot="prepend">
                                     <Icon :size="16" type="person"></Icon>
                                 </span>
                             </Input>
                         </FormItem>
                         <FormItem prop="password">
                             <Input type="password" v-model="form.password" placeholder="请输入密码">
-                            <span slot="prepend">
+                                <span slot="prepend">
                                     <Icon :size="14" type="locked"></Icon>
                                 </span>
                             </Input>
@@ -39,64 +39,61 @@
 </template>
 
 <script>
-    import Cookies from 'js-cookie';
-    export default {
-        data () {
-            return {
-                form: {
-                    userName: 'admin',
-                    password: 'admin'
-                },
-                rules: {
-                    userName: [
-                        { required: true, message: '账号不能为空', trigger: 'blur' }
-                    ],
-                    password: [
-                        { required: true, message: '密码不能为空', trigger: 'blur' }
-                    ]
-                }
-            };
-        },
-        methods: {
-            handleSubmit () {
-                this.$refs.loginForm.validate((valid) => {
-                    if (valid) {
-                        Cookies.set('user', this.form.userName);
-                        Cookies.set('password', this.form.password);
-                        this.$store.commit('setAvator', 'https://ss1.bdstatic.com/70cFvXSh_Q1YnxGkpoWK1HF6hhy/it/u=3448484253,3685836170&fm=27&gp=0.jpg');
-                        if (this.form.userName === 'iview_admin') {
-                            Cookies.set('access', 0);
-                        } else {
-                            Cookies.set('access', 1);
-                        }
-
-                        let urlStr='http://localhost:8181/oauth/login';
-                        let postData={username:this.form.userName,password:this.form.password}
-                        this.$http.post(urlStr,postData).then((data) => {
-                            console.log(data.body);
-                            if(data.body.code==0){
-                                this.$router.push({
-                                    name: 'home_index'
-                                });
-                            }else{
-
-                            }
-                        }, (error) => {
-                            console.log(error.body)
-                        });
-
-                        // urlStr='http://localhost:8181/sysUser/16ca5e0d3d4a4f988f748a5879c9ca98';
-                        // this.$http.get(urlStr).then((data) => {
-                        //     console.log(data);
-                        // }, (error) => {
-                        //     console.log(error)
-                        // });
-
-                    }
-                });
+import Cookies from 'js-cookie';
+import axios from 'axios';
+export default {
+    data () {
+        return {
+            form: {
+                userName: 'admin',
+                password: 'admin'
+            },
+            rules: {
+                userName: [
+                    { required: true, message: '账号不能为空', trigger: 'blur' }
+                ],
+                password: [
+                    { required: true, message: '密码不能为空', trigger: 'blur' }
+                ]
             }
+        };
+    },
+    methods: {
+        handleSubmit () {
+            let that = this;
+            this.$refs.loginForm.validate((valid) => {
+                if (valid) {
+                    Cookies.set('user', this.form.userName);
+                    Cookies.set('password', this.form.password);
+                    this.$store.commit('setAvator', 'https://ss1.bdstatic.com/70cFvXSh_Q1YnxGkpoWK1HF6hhy/it/u=3448484253,3685836170&fm=27&gp=0.jpg');
+                    if (this.form.userName === 'iview_admin') {
+                        Cookies.set('access', 0);
+                    } else {
+                        Cookies.set('access', 1);
+                    }
+
+                    let urlStr='/oauth/login';
+                    let postData={username:this.form.userName,password:this.form.password}
+                    axios.post(urlStr, postData)
+                    .then(function (response) {
+                        console.log(response);
+                        if(response.data.code==0){
+                            that.$router.push({
+                                name: 'home_index'
+                            });
+                        }else{
+                            
+                        }
+                    })
+                    .catch(function (error) {
+                        console.log(error);
+                    });
+                    
+                }
+            });
         }
-    };
+    }
+};
 </script>
 
 <style>
