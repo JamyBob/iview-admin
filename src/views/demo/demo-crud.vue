@@ -8,11 +8,22 @@
         <Row>
            <Col>
                 <Card>
-                    <Button type="primary" @click="showModal = true" >新建</Button>
-                    <Modal v-model="showModal" @on-ok="createNew" title="新建用户">
-                            <Form :model="formItem" :label-width="80">
+                    <Button type="primary" @click="showModal = true; formItem={}" >新建</Button>                    
+                    <Button type="error" >批量删除</Button>
+                    <Input v-model="keyword"  placeholder="按名称搜索" style="width: 200px"></Input>
+                    <Button @click="getData" type="primary" shape="circle" icon="ios-search">Search</Button>
+                    <div class="edittable-con-1">
+                        <Table border ref="selection" :columns="columnsList" :data="tableData"></Table>
+                        <Button @click="handleSelectAll(true)">全选</Button>
+                        <Button @click="handleSelectAll(false)">取消全选</Button>
+                    </div>
+                </Card>
+            </Col>
+        </Row>
+        <Modal v-model="showModal" @on-ok="submitForm" title="新建用户">
+                            <Form :model="formItem" :label-width="80" >
                               <FormItem label="用户名">
-                                  <Input v-model="formItem.username" placeholder="名称"></Input>
+                                  <Input v-model="formItem.username" placeholder="名称" ></Input>
                               </FormItem>
                               <FormItem label="邮箱">
                                   <Input v-model="formItem.email" placeholder="邮箱"></Input>
@@ -60,15 +71,6 @@
                               </FormItem> -->
                           </Form>
                     </Modal>
-                    <Button type="error" @click="showModal = true" >批量删除</Button>
-                    <Input v-model="keyword" placeholder="按名称搜索" style="width: 200px"></Input>
-                    <Button type="primary" shape="circle" icon="ios-search">Search</Button>
-                    <div class="edittable-con-1">
-                        <can-edit-table refs="table1" @on-delete="handleDel" v-model="tableData" :columns-list="columnsList"></can-edit-table>
-                    </div>
-                </Card>
-            </Col>
-        </Row>
     </div>
 </template>
 
@@ -86,6 +88,7 @@ export default {
       keyword: "",
       showModal: false,
       formItem: {
+        disabled: false,
         username: "",
         email: "",
         mobile: "",
@@ -97,6 +100,11 @@ export default {
         comment: ""
       },
       columnsList: [
+        {
+          type: "selection",
+          width: 60,
+          align: "center"
+        },
         {
           title: "姓名",
           align: "center",
@@ -121,8 +129,61 @@ export default {
           title: "操作",
           align: "center",
           width: 180,
-          key: "handle",
-          handle: ["edit", "delete"]
+          key: "action",
+          render: (h, params) => {
+            return h("div", [
+              h(
+                "Button",
+                {
+                  props: {
+                    type: "primary",
+                    size: "small"
+                  },
+                  on: {
+                    click: () => {
+                      this.show(params.index);
+                    }
+                  }
+                },
+                "查看"
+              ),
+              h(
+                "Button",
+                {
+                  props: {
+                    type: "primary",
+                    size: "small"
+                  },
+                  on: {
+                    click: () => {
+                      this.modify(params.index);
+                    }
+                  }
+                },
+                "修改"
+              ),
+              h("Button", [
+                h(
+                  "Poptip",
+                  {
+                    props: {
+                      confirm: true,
+                      title: "确定要删除吗！",
+                      type: "error",
+                      size: "small"
+                    },
+                    on: {
+                      "on-ok": () => {
+                        this.remove(params.index);
+                      },
+                      "on-cancel": () => {}
+                    }
+                  },
+                  "删除"
+                )
+              ])
+            ]);
+          }
         }
       ],
       tableData: []
@@ -134,10 +195,9 @@ export default {
       let urlStr = "/sysUser/page";
       axios
         .get(urlStr, {
-          params: {}
+          params: { keyword: this.keyword }
         })
         .then(function(response) {
-          console.log(response);
           if (response.data) {
             that.tableData = response.data.list;
           }
@@ -146,25 +206,41 @@ export default {
           console.log(error);
         });
     },
-    createNew() {
-      console.log(this.formItem)
-      let that=this;
+    submitForm() {
+      let that = this;
       let urlStr = "/sysUser";
-      axios
-        .post(urlStr, this.formItem)
-        .then(function(response) {
-          console.log(response);
-          if (response.data.code == 0) {
-             that.getData();
-          } else {
-          }
-        })
-        .catch(function(error) {
-          console.log(error);
-        });
+      if (this.formItem.id) {
+        //修改
+        axios
+          .put(urlStr, this.formItem)
+          .then(function(response) {
+            console.log(response);
+            if (response.data.code == 0) {
+              that.getData();
+            } else {
+            }
+          })
+          .catch(function(error) {
+            console.log(error);
+          });
+      } else {
+        //新建
+        axios
+          .post(urlStr, this.formItem)
+          .then(function(response) {
+            console.log(response);
+            if (response.data.code == 0) {
+              that.getData();
+            } else {
+            }
+          })
+          .catch(function(error) {
+            console.log(error);
+          });
+      }
     },
-    handleDel(val, index) {
-      var obj = val[index];
+    remove(index) {
+      var obj = this.tableData[index];
       let that = this;
       let urlStr = "/sysUser/" + obj.id;
       axios
@@ -175,11 +251,25 @@ export default {
           console.log(response);
           if (response.data) {
             that.$Message.success("删除了第" + (index + 1) + "行数据");
+            that.getData();
           }
         })
         .catch(function(error) {
           that.$Message.error("删除失败");
         });
+    },
+    modify(index) {
+      this.formItem = this.tableData[index];
+      this.formItem.disabled = false;
+      this.showModal = true;
+    },
+    show(index) {
+      this.formItem = this.tableData[index];
+      this.formItem.disabled = true;
+      this.showModal = true;
+    },
+    handleSelectAll(status) {
+      this.$refs.selection.selectAll(status);
     }
   },
   created() {

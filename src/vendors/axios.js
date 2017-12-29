@@ -1,5 +1,5 @@
 import axios from 'axios'
-
+//import qs from 'qs'
 // axios 配置
 axios.defaults.timeout = 5000;
 axios.defaults.headers.post['Content-Type'] = 'application/x-www-form-urlencoded;charset=UTF-8';
@@ -10,7 +10,12 @@ axios.defaults.withCredentials = true ;
 axios.interceptors.request.use(function (config) {
     // Do something before request is sent
     console.log("axios  request 拦截");
-    
+    // if(config.method  === 'post'){
+    //   config.data = qs.stringify(config.data);
+    // }
+    // if(config.method  === 'put'){
+    //   config.data = qs.stringify(config.data);
+    // }
     return config;
   }, function (error) {
     // Do something with request error
