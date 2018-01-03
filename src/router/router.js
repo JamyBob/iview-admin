@@ -220,17 +220,7 @@ export const appRouter = [
         children: [
             { path: 'index', title: '错误页面', name: 'errorpage_index', component: resolve => { require(['@/views/error-page/error-page.vue'], resolve); } }
         ]
-    },
-    {
-        path: '/demo',
-        icon: 'ios-infinite',
-        name: 'demo',
-        title: '应用实例',
-        component: Main,
-        children: [
-            { path: 'demo-crud', title: '增删改查列表', name: 'demo-crud', icon: 'link', component: resolve => { require(['@/views/demo/demo-crud.vue'], resolve); } },
-        ]
-    },
+    }
 ];
 
 // 所有上面定义的路由都要写在下面的routers里

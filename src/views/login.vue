@@ -3,7 +3,6 @@
 </style>
 
 <template>
-
     <div class="login" @keydown.enter="handleSubmit">
         <div class="login-con">
             <Card :bordered="false">
@@ -40,13 +39,12 @@
 
 <script>
 import Cookies from 'js-cookie';
-import axios from 'axios';
 export default {
     data () {
         return {
             form: {
-                userName: 'admin',
-                password: 'admin'
+                userName: 'iview_admin',
+                password: ''
             },
             rules: {
                 userName: [
@@ -60,7 +58,6 @@ export default {
     },
     methods: {
         handleSubmit () {
-            let that = this;
             this.$refs.loginForm.validate((valid) => {
                 if (valid) {
                     Cookies.set('user', this.form.userName);
@@ -71,24 +68,9 @@ export default {
                     } else {
                         Cookies.set('access', 1);
                     }
-
-                    let urlStr='/oauth/login';
-                    let postData={username:this.form.userName,password:this.form.password}
-                    axios.post(urlStr, postData)
-                    .then(function (response) {
-                        console.log(response);
-                        if(response.data.code==0){
-                            that.$router.push({
-                                name: 'home_index'
-                            });
-                        }else{
-                            
-                        }
-                    })
-                    .catch(function (error) {
-                        console.log(error);
+                    this.$router.push({
+                        name: 'home_index'
                     });
-                    
                 }
             });
         }
