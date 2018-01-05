@@ -3,6 +3,7 @@
 </style>
 
 <template>
+
     <div class="login" @keydown.enter="handleSubmit">
         <div class="login-con">
             <Card :bordered="false">
@@ -39,12 +40,13 @@
 
 <script>
 import Cookies from 'js-cookie';
+import axios from 'axios';
 export default {
     data () {
         return {
             form: {
-                userName: 'iview_admin',
-                password: ''
+                userName: 'admin',
+                password: 'admin'
             },
             rules: {
                 userName: [
@@ -58,19 +60,35 @@ export default {
     },
     methods: {
         handleSubmit () {
+            let that = this;
             this.$refs.loginForm.validate((valid) => {
                 if (valid) {
                     Cookies.set('user', this.form.userName);
                     Cookies.set('password', this.form.password);
                     this.$store.commit('setAvator', 'https://ss1.bdstatic.com/70cFvXSh_Q1YnxGkpoWK1HF6hhy/it/u=3448484253,3685836170&fm=27&gp=0.jpg');
-                    if (this.form.userName === 'iview_admin') {
+                    if (this.form.userName === 'admin') {
                         Cookies.set('access', 0);
                     } else {
                         Cookies.set('access', 1);
                     }
-                    this.$router.push({
-                        name: 'home_index'
+
+                    let urlStr='/oauth/login';
+                    let postData={username:this.form.userName,password:this.form.password}
+                    axios.post(urlStr, postData)
+                    .then(function (response) {
+                        console.log(response);
+                        if(response.data.code==0){
+                            that.$router.push({
+                                name: 'home_index'
+                            });
+                        }else{
+                            
+                        }
+                    })
+                    .catch(function (error) {
+                        console.log(error);
                     });
+                    
                 }
             });
         }

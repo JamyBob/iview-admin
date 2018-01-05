@@ -8,9 +8,12 @@ import '@/locale';
 import 'iview/dist/styles/iview.css';
 import VueI18n from 'vue-i18n';
 import util from '@/libs/util';
+import { VirtualScroller } from 'vue-virtual-scroller';
+import axios from './vendors/axios';
 
 Vue.use(VueI18n);
 Vue.use(iView);
+Vue.component('virtual-scroller', VirtualScroller);
 
 new Vue({
     el: '#app',
@@ -28,7 +31,7 @@ new Vue({
         // 权限菜单过滤相关
         this.$store.commit('updateMenulist');
         // iview-admin检查更新
-        util.checkUpdate(this);
+        // util.checkUpdate(this);
     },
     created () {
         let tagsList = [];
