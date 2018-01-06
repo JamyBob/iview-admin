@@ -75,7 +75,8 @@
     import themeSwitch from './main-components/theme-switch/theme-switch.vue';
     import Cookies from 'js-cookie';
     import util from '@/libs/util.js';
-    
+    import axios from 'axios';
+
     export default {
         components: {
             shrinkableMenu,
@@ -144,11 +145,20 @@
                     });
                 } else if (name === 'loginout') {
                     // 退出登录
-                    this.$store.commit('logout', this);
-                    this.$store.commit('clearOpenedSubmenu');
-                    this.$router.push({
-                        name: 'login'
-                    });
+                let that = this;
+                    let urlStr='/oauth/signout';
+                    axios
+                        .get(urlStr, {
+                        params: {}
+                        })
+                        .then(function(response) {
+                            that.$store.commit('logout', that);
+                            that.$store.commit('clearOpenedSubmenu');
+                            that.$router.push({
+                                name: 'login'
+                            });
+                        });
+                    
                 }
             },
             checkTag (name) {

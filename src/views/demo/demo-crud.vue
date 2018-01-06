@@ -13,7 +13,7 @@
                     <Input v-model="keyword"  placeholder="按名称搜索" style="width: 200px"></Input>
                     <Button @click="getData" type="primary" shape="circle" icon="ios-search">Search</Button>
                     <div class="edittable-con-1">
-                        <Table border ref="selection" :columns="columnsList" :data="tableData" ></Table>
+                        <Table border ref="selection" :columns="columnsList" :data="tableData" @on-selection-change="tableSelectChange" ></Table>
                         <Button @click="handleSelectAll(true)">全选</Button>
                         <Button @click="handleSelectAll(false)">取消全选</Button>
                     </div>
@@ -174,7 +174,7 @@ export default {
                     },
                     on: {
                       "on-ok": () => {
-                        this.remove(params.index);
+                        this.removeSingl(params.index);
                       },
                       "on-cancel": () => {}
                     }
@@ -186,7 +186,8 @@ export default {
           }
         }
       ],
-      tableData: []
+      tableData: [],
+      selectedItems: []
     };
   },
   methods: {
@@ -239,10 +240,9 @@ export default {
           });
       }
     },
-    remove(index) {
-      var obj = this.tableData[index];
+    remove(ids) {
       let that = this;
-      let urlStr = "/sysUser/" + obj.id;
+      let urlStr = "/sysUser/" + ids;
       axios
         .delete(urlStr, {
           params: {}
@@ -250,17 +250,30 @@ export default {
         .then(function(response) {
           console.log(response);
           if (response.data) {
-            that.$Message.success("删除了第" + (index + 1) + "行数据");
+            that.$Message.success("删除成功");
             that.getData();
           }
         })
         .catch(function(error) {
+          console.log(error);
           that.$Message.error("删除失败");
         });
     },
+    removeSingl(index){
+      var obj = this.tableData[index];
+      this.remove(obj.id);
+    },
     removeAll() {
       // 将选中的行id delete到 /sysUser/
-      
+      let ids='';      
+      this.selectedItems.forEach((item)=>{
+        ids+=item.id+'_';
+      });
+      //console.log(ids);
+      this.remove(ids);
+    },
+    tableSelectChange(items){
+      this.selectedItems=items;
     },
     modify(index) {
       this.formItem = this.tableData[index];
