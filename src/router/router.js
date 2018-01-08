@@ -81,10 +81,10 @@ export const appRouter = [
         icon: 'lock-combination',
         title: '权限测试页',
         name: 'accesstest',
-        access: 0,
+        access: ['KT Admin'],
         component: Main,
         children: [
-            { path: 'index', title: '权限测试页', name: 'accesstest_index', access: 0, component: resolve => { require(['@/views/access/access-test.vue'], resolve); } }
+            { path: 'index', title: '权限测试页', name: 'accesstest_index', access: ['KT Admin'], component: resolve => { require(['@/views/access/access-test.vue'], resolve); } }
         ]
     },
     {

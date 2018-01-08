@@ -38,8 +38,9 @@ const app = {
             state.tagsList.push(...list);
         },
         updateMenulist (state) {
-            let accessCode = parseInt(Cookies.get('access'));
+            let accessCode = JSON.parse(Cookies.get('access'));
             let menuList = [];
+            console.log(accessCode);
             appRouter.forEach((item, index) => {
                 if (item.access !== undefined) {
                     if (Util.showThisRoute(item.access, accessCode)) {
@@ -50,7 +51,11 @@ const app = {
                             let childrenArr = [];
                             childrenArr = item.children.filter(child => {
                                 if (child.access !== undefined) {
-                                    if (child.access === accessCode) {
+                                    console.log(child.access);
+                                    console.log(accessCode);
+                                    let intersectionSet = new Set([...child.access].filter(x => accessCode.has(x)));
+                                    //if (child.access === accessCode)
+                                    if(intersectionSet.length>0){
                                         return child;
                                     }
                                 } else {

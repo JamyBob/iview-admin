@@ -41,7 +41,10 @@ util.oneOf = function (ele, targetArr) {
 };
 
 util.showThisRoute = function (itAccess, currentAccess) {
-    if (typeof itAccess === 'object' && Array.isArray(itAccess)) {
+    if (Array.isArray(itAccess) && Array.isArray(currentAccess)) {
+        let intersectionSet = new Set([...new Set(itAccess)].filter(x => new Set(currentAccess).has(x)));
+        return intersectionSet.size>0;
+    } else if (typeof itAccess === 'object' && Array.isArray(itAccess)) {
         return util.oneOf(currentAccess, itAccess);
     } else {
         return itAccess === currentAccess;

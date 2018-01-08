@@ -56,19 +56,9 @@
                                       <Checkbox label="Movie">临时用户</Checkbox>
                                   </CheckboxGroup>
                               </FormItem>
-                              <FormItem label="启用">
-                                  <i-switch v-model="formItem.switch" size="large">
-                                      <span slot="open">启用</span>
-                                      <span slot="close">关闭</span>
-                                  </i-switch>
-                              </FormItem>
                               <FormItem label="备注">
                                   <Input v-model="formItem.comment" type="textarea" :autosize="{minRows: 2,maxRows: 5}" placeholder="备注"></Input>
                               </FormItem>
-                              <!-- <FormItem>
-                                  <Button type="primary">Submit</Button>
-                                  <Button type="ghost" style="margin-left: 8px">Cancel</Button>
-                              </FormItem> -->
                           </Form>
                     </Modal>
     </div>
