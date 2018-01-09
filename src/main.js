@@ -10,6 +10,7 @@ import VueI18n from 'vue-i18n';
 import util from '@/libs/util';
 import { VirtualScroller } from 'vue-virtual-scroller';
 import axios from './vendors/axios';
+import permission from './directive/permission'
 
 Vue.use(VueI18n);
 Vue.use(iView);

@@ -8,8 +8,8 @@
         <Row>
            <Col>
                 <Card>
-                    <Button type="primary" @click="showModal = true; formItem={}" >新建</Button>                    
-                    <Button type="error" @click="removeAll" >批量删除</Button>
+                    <Button v-permission="['KT Admin']" type="primary" @click="showModal = true; formItem={}" >新建</Button>                    
+                    <Button v-permission="['KT Admin']" type="error" @click="removeAll" >批量删除</Button>
                     <Input v-model="keyword"  placeholder="按名称搜索" style="width: 200px"></Input>
                     <Button @click="getData" type="primary" shape="circle" icon="ios-search">Search</Button>
                     <div class="edittable-con-1">

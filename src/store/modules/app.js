@@ -40,7 +40,6 @@ const app = {
         updateMenulist (state) {
             let accessCode = JSON.parse(Cookies.get('access'));
             let menuList = [];
-            console.log(accessCode);
             appRouter.forEach((item, index) => {
                 if (item.access !== undefined) {
                     if (Util.showThisRoute(item.access, accessCode)) {
