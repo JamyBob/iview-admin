@@ -16,7 +16,7 @@ Vue.use(VueI18n);
 Vue.use(iView);
 Vue.component('virtual-scroller', VirtualScroller);
 
-new Vue({
+window.MYVUE=new Vue({
     el: '#app',
     router: router,
     store: store,

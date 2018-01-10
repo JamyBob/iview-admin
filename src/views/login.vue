@@ -63,7 +63,6 @@ export default {
             let that = this;
             this.$refs.loginForm.validate((valid) => {
                 if (valid) {
-
                     let urlStr='/oauth/login';
                     let postData={username:this.form.userName,password:this.form.password}
                     axios.post(urlStr, postData)
@@ -73,8 +72,7 @@ export default {
                         Cookies.set('user', response.data.result);
                         that.$store.commit('setAvator', 'https://ss1.bdstatic.com/70cFvXSh_Q1YnxGkpoWK1HF6hhy/it/u=3448484253,3685836170&fm=27&gp=0.jpg');
                        //设置当前用户权限，权限列表将与/router/router.js中配置的节点access字符串相匹配确定是否显示此菜单，匹配操作见/store/app.js/updateMenulist()
-                        Cookies.set('access', response.data.result.permissions);                        
-
+                        Cookies.set('access', response.data.result.permissions);
                         //跳转到主页
                         if(response.data.code==0){
                             that.$router.push({
