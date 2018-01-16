@@ -48,8 +48,9 @@ export default {
     name: 'access_index',
     data () {
         return {
-            accessCode: parseInt(Cookies.get('access')),
-            switchValue: parseInt(Cookies.get('access')) === 1
+            storeAccessCode: JSON.parse(Cookies.get('access')),
+            accessCode: JSON.parse(Cookies.get('access')),
+            switchValue: JSON.parse(Cookies.get('access')).length>0
         };
     },
     computed: {
@@ -60,11 +61,11 @@ export default {
     methods: {
         changeAccess (res) {
             if (res) {
-                this.accessCode = 1;
-                Cookies.set('access', 1);
+                this.accessCode = this.storeAccessCode;                
+                Cookies.set('access', this.storeAccessCode);
             } else {
-                this.accessCode = 0;
-                Cookies.set('access', 0);
+                this.accessCode = [];
+                Cookies.set('access', []);
             }
             this.$store.commit('updateMenulist');
         }

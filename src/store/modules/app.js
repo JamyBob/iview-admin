@@ -38,6 +38,7 @@ const app = {
             state.tagsList.push(...list);
         },
         updateMenulist (state) {
+            if(!Cookies.get('access')){return;} //第一次打开登陆页，access无内容不做处理
             let accessCode = JSON.parse(Cookies.get('access'));
             let menuList = [];
             appRouter.forEach((item, index) => {

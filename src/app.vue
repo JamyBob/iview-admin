@@ -5,6 +5,7 @@
 </template>
 
 <script>
+    global.showLoginBox=true;
     export default {
         data () {
             return {

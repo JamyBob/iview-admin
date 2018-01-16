@@ -63,6 +63,42 @@
                 </keep-alive>
             </div>
         </div>
+
+        <Modal v-model="showLoginModal" >
+           <div class="login" @keydown.enter="handleSubmit">
+        <div class="login-con">
+            <Card :bordered="false">
+                <p slot="title">
+                    <Icon type="log-in"></Icon>
+                    欢迎登录
+                </p>
+                <div class="form-con">
+                    <Form ref="loginForm" :model="form" :rules="rules">
+                        <FormItem prop="userName">
+                            <Input v-model="form.userName" placeholder="请输入用户名">
+                                <span slot="prepend">
+                                    <Icon :size="16" type="person"></Icon>
+                                </span>
+                            </Input>
+                        </FormItem>
+                        <FormItem prop="password">
+                            <Input type="password" v-model="form.password" placeholder="请输入密码">
+                                <span slot="prepend">
+                                    <Icon :size="14" type="locked"></Icon>
+                                </span>
+                            </Input>
+                        </FormItem>
+                        <FormItem>
+                            <Button @click="handleSubmit" type="primary" long>登录</Button>
+                        </FormItem>
+                    </Form>
+                </div>
+            </Card>
+        </div>
+    </div>
+    <div slot="footer"></div>
+        </Modal>
+
     </div>
 </template>
 <script>
@@ -76,6 +112,7 @@
     import Cookies from 'js-cookie';
     import util from '@/libs/util.js';
     import axios from 'axios';
+    import Bus from '../libs/bus';
 
     export default {
         components: {
@@ -89,10 +126,23 @@
         },
         data () {
             return {
+                showLoginModal:false,
                 shrink: false,
                 userName: '',
                 isFullScreen: false,
-                openedSubmenuArr: this.$store.state.app.openedSubmenuArr
+                openedSubmenuArr: this.$store.state.app.openedSubmenuArr,
+                form: {
+                    userName: 'admin',
+                    password: 'admin'
+                },
+                rules: {
+                    userName: [
+                        { required: true, message: '账号不能为空', trigger: 'blur' }
+                    ],
+                    password: [
+                        { required: true, message: '密码不能为空', trigger: 'blur' }
+                    ]
+                }
             };
         },
         computed: {
@@ -184,6 +234,35 @@
             },
             fullscreenChange (isFullScreen) {
                 // console.log(isFullScreen);
+            },
+            handleSubmit () {
+                let that = this;
+                this.$refs.loginForm.validate((valid) => {
+                    if (valid) {
+                        let urlStr='/oauth/login';
+                        let postData={username:this.form.userName,password:this.form.password}
+                        axios.post(urlStr, postData)
+                        .then(function (response) {
+                            console.log(response);                        
+                            //登录成功保存用户登录状态
+                            if(response.data.code==0){                            
+                                Cookies.set('user', response.data.result);
+                                that.$store.commit('setAvator', 'https://ss1.bdstatic.com/70cFvXSh_Q1YnxGkpoWK1HF6hhy/it/u=3448484253,3685836170&fm=27&gp=0.jpg');
+                                //设置当前用户权限，权限列表将与/router/router.js中配置的节点access字符串相匹配确定是否显示此菜单，匹配操作见/store/app.js/updateMenulist()
+                                Cookies.set('access', response.data.result.permissions);
+                                //跳转到主页
+                                that.showLoginModal=false;
+                                that.$Message.info("登录成功");
+                            }else{
+                                that.$Message.warning(response.data.msg);
+                            }
+                        })
+                        .catch(function (error) {
+                            that.$Message.warning('登录出错');
+                        });
+                        
+                    }
+                });
             }
         },
         watch: {
@@ -201,6 +280,11 @@
             }
         },
         mounted () {
+            let that=this;
+            Bus.$on('relogin', (e) => {
+                //console.log(e);
+                that.showLoginModal=true;
+            })
             this.init();
         },
         created () {
