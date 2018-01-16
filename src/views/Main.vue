@@ -64,7 +64,7 @@
             </div>
         </div>
 
-        <Modal v-model="showLoginModal" >
+        <Modal v-model="showLoginModal" :mask-closable="false" >
            <div class="login" @keydown.enter="handleSubmit">
         <div class="login-con">
             <Card :bordered="false">
