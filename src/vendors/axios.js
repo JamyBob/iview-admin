@@ -39,7 +39,7 @@ axios.interceptors.response.use(function (response) {
         case 401:MYVUE.$Message.error('未授权访问此资源'); break; //未授权
         case 403: //禁止访问
           MYVUE.$Message.error('未登录或登录超时，请重新登陆');
-          Bus.$emit('relogin')
+          Bus.$emit('relogin');
           //MYVUE.$store.commit('logout', MYVUE);
           //MYVUE.$store.commit('clearOpenedSubmenu');
           //MYVUE.$router.push({name: 'login' });

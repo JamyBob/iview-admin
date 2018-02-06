@@ -222,13 +222,16 @@ export const appRouter = [
         ]
     },
     {
-        path: '/demo',
+        path: '/sys',
         icon: 'ios-infinite',
-        name: 'demo',
-        title: '应用实例',
+        name: 'sys',
+        title: '系统信息维护',
         component: Main,
         children: [
-            { path: 'demo-crud', title: '增删改查列表', name: 'demo-crud', icon: 'link', component: resolve => { require(['@/views/demo/demo-crud.vue'], resolve); } },
+            { path: 'user', title: '用户管理', name: 'user-setting', icon: 'link', component: resolve => { require(['@/views/sys/user.vue'], resolve); } },
+            { path: 'role', title: '角色管理', name: 'role-setting', icon: 'link', component: resolve => { require(['@/views/sys/role.vue'], resolve); } },
+            { path: 'permission', title: '资源管理', name: 'permission-setting', icon: 'link', component: resolve => { require(['@/views/sys/permission.vue'], resolve); } },
+            { path: 'authority', title: '权限管理', name: 'authority-setting', icon: 'link', component: resolve => { require(['@/views/sys/authority.vue'], resolve); } },
         ]
     },
 ];
