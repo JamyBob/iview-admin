@@ -1,286 +1,191 @@
 <style lang="less">
 @import "../../styles/common.less";
-@import "./demo-crud.less";
 </style>
 
 <template>
-    <div>
+    <div class="access">
         <Row>
-           <Col>
-                <Card>
-                    <Button v-permission="['KT Admin']" type="primary" @click="showModal = true; formItem={}" >新建</Button>                    
-                    <Button v-permission="['KT Admin']" type="error" @click="removeAll" >批量删除</Button>
-                    <Input v-model="keyword"  placeholder="按名称搜索" style="width: 200px"></Input>
-                    <Button @click="getData" type="primary" shape="circle" icon="ios-search">Search</Button>
-                    <div class="edittable-con-1">
-                        <Table border ref="selection" :columns="columnsList" :data="tableData" @on-selection-change="tableSelectChange" ></Table>
-                        <Button @click="handleSelectAll(true)">全选</Button>
-                        <Button @click="handleSelectAll(false)">取消全选</Button>
+            <Col span="12">
+            <Card>
+                <p slot="title">
+                    <Icon type="android-contact"></Icon>
+                    角色列表
+                </p>
+                <div class="access-user-con access-current-user-con">
+                    <div class="ivu-table ivu-table-border">
+                        <table style="width:100%;word-break: break-all;">
+                            <thead>
+                                <tr>
+                                    <th @click="oroleName?sysRoleReqParams.orderBy='roleName ASC':sysRoleReqParams.orderBy='roleName DESC';oroleName=!oroleName;getRolePermList();">角色名</th>
+                                    <th @click="oremark?sysRoleReqParams.orderBy='remark ASC':sysRoleReqParams.orderBy='remark DESC';oremark=!oremark;getRolePermList();">备注</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <tr v-for="item in roleList" @click="onRoleItemClick(item)">
+                                    <td>{{item.roleName}}</td>
+                                    <td>{{item.remark}}</td>
+                                </tr>
+                            </tbody>
+                        </table>
                     </div>
-                </Card>
+                </div>
+            </Card>
+            </Col>
+            <Col span="12" class="padding-left-10">
+            <Card>
+                <p slot="title">
+                    <Icon type="android-contacts"></Icon>
+                    {{currentRole.roleName}}授权资源列表
+                </p>
+                <div class="access-user-con access-change-access-con">
+                    <Col span="24" class="padding-left-10">
+                    <Row type="flex" justify="center" align="middle" class="access-change-access-con-row">
+                        <Tree :data="permissionTree" @on-check-change="onTreeNodeCheck" show-checkbox multiple></Tree>
+                    </Row>
+                    </Col>
+                </div>
+            </Card>
             </Col>
         </Row>
-        <Modal v-model="showModal" @on-ok="submitForm" title="新建用户">
-                            <Form :model="formItem" :label-width="80" >
-                              <FormItem label="用户名">
-                                  <Input v-model="formItem.username" placeholder="名称" ></Input>
-                              </FormItem>
-                              <FormItem label="邮箱">
-                                  <Input v-model="formItem.email" placeholder="邮箱"></Input>
-                              </FormItem>
-                              <FormItem label="手机">
-                                  <Input v-model="formItem.mobile" placeholder="手机"></Input>
-                              </FormItem>
-                              <FormItem label="密码">
-                                  <Input v-model="formItem.password" placeholder="密码"></Input>
-                              </FormItem>
-                              <FormItem label="所属部门">
-                                  <Select v-model="formItem.select">
-                                      <Option value="beijing">New York</Option>
-                                      <Option value="shanghai">London</Option>
-                                      <Option value="shenzhen">Sydney</Option>
-                                  </Select>
-                              </FormItem>
-                              <FormItem label="状态">
-                                  <RadioGroup v-model="formItem.status">
-                                      <Radio label="0">未激活</Radio>
-                                      <Radio label="1">激活</Radio>
-                                      <Radio label="2">锁定</Radio>
-                                  </RadioGroup>
-                              </FormItem>
-                              <FormItem label="角色">
-                                  <CheckboxGroup v-model="formItem.checkbox">
-                                      <Checkbox label="Eat">管理员</Checkbox>
-                                      <Checkbox label="Sleep">用户</Checkbox>
-                                      <Checkbox label="Run">部门经理</Checkbox>
-                                      <Checkbox label="Movie">临时用户</Checkbox>
-                                  </CheckboxGroup>
-                              </FormItem>
-                              <FormItem label="备注">
-                                  <Input v-model="formItem.comment" type="textarea" :autosize="{minRows: 2,maxRows: 5}" placeholder="备注"></Input>
-                              </FormItem>
-                          </Form>
-                    </Modal>
     </div>
 </template>
 
 <script>
 import axios from "axios";
-import tableData from "../tables/components/table_data.js";
-import canEditTable from "../tables/components/canEditTable.vue";
+import util from "@/libs/util";
 export default {
-  name: "demo-crud",
-  components: {
-    canEditTable
-  },
-  data() {
-    return {
-      keyword: "",
-      showModal: false,
-      formItem: {
-        disabled: false,
-        username: "",
-        email: "",
-        mobile: "",
-        password: "",
-        select: "",
-        status: "0",
-        checkbox: [],
-        switch: true,
-        comment: ""
-      },
-      columnsList: [
-        {
-          type: "selection",
-          width: 60,
-          align: "center"
+    name: "demo-crud",
+    data() {
+        return {
+            oroleName: true,
+            oremark: true,
+            sysRoleReqParams: { keyword: "", orderBy: "" },
+            sysRoleResData: { list: [], pageNum: 0, size: 0 },
+            permissionTree: [],
+            permissionList: [],
+            roleList: [],
+            rolePermList: [],
+            currentRole: { roleName: "" }
+        };
+    },
+    methods: {
+        getpermissionTree() {
+            let that = this;
+            return axios.get("/sysPermission/all").then(function(response) {
+                if (response.data) {
+                    that.permissionList = response.data;
+                    that.permissionTree = util.getJsonTree(
+                        that.permissionList,
+                        "#"
+                    );
+                }
+            });
         },
-        {
-          title: "姓名",
-          align: "center",
-          key: "username"
+        getRoleList() {
+            let that = this;
+            return axios.get("/sysRole/all").then(function(response) {
+                if (response.data) {
+                    that.roleList = response.data;
+                }
+            });
         },
-        {
-          title: "邮箱",
-          key: "email",
-          align: "center"
-        },
-        {
-          title: "电话",
-          align: "center",
-          key: "mobile"
-        },
-        {
-          title: "状态",
-          align: "center",
-          key: "status"
-        },
-        {
-          title: "操作",
-          align: "center",
-          width: 180,
-          key: "action",
-          render: (h, params) => {
-            return h("div", [
-              h(
-                "Button",
-                {
-                  props: {
-                    type: "primary",
-                    size: "small"
-                  },
-                  on: {
-                    click: () => {
-                      this.show(params.index);
+        getRolePermList() {
+            let that = this;
+            let urlStr = "/sysRolePermission/all";
+            axios
+                .get(urlStr, { params: this.sysRoleReqParams })
+                .then(function(response) {
+                    if (response.data) {
+                        that.rolePermList = response.data;
+                        if (that.currentRole) {
+                            that.onRoleItemClick(that.currentRole);
+                        }
                     }
-                  }
-                },
-                "查看"
-              ),
-              h(
-                "Button",
-                {
-                  props: {
-                    type: "primary",
-                    size: "small"
-                  },
-                  on: {
-                    click: () => {
-                      this.modify(params.index);
-                    }
-                  }
-                },
-                "修改"
-              ),
-              h("Button", [
-                h(
-                  "Poptip",
-                  {
-                    props: {
-                      confirm: true,
-                      title: "确定要删除吗！",
-                      type: "error",
-                      size: "small"
-                    },
-                    on: {
-                      "on-ok": () => {
-                        this.removeSingl(params.index);
-                      },
-                      "on-cancel": () => {}
-                    }
-                  },
-                  "删除"
-                )
-              ])
-            ]);
-          }
+                });
+        },
+        onRoleItemClick(roleItem) {
+            this.currentRole = roleItem;
+            let hasPermList = [];
+            for (let item of this.rolePermList) {
+                if (item.roleId == roleItem.id) {
+                    hasPermList.push(item.permissionId);
+                }
+            }
+            for (let item of this.permissionList) {
+                if (hasPermList.indexOf(item.id) != -1) {
+                    item.checked = true;
+                } else {
+                    item.checked = false;
+                }
+            }
+            this.currentRole.hasPermList = hasPermList;
+            this.permissionTree = util.getJsonTree(this.permissionList, "#");
+        },
+        onTreeNodeCheck(permissions) {
+            let that = this;
+            let permissionIds = [];
+            if (!that.currentRole.id) {
+                that.$Message.info("请先选择角色");
+                return;
+            }
+            // 添加权限
+            let addPermission = [];
+            for (let item of permissions) {
+                permissionIds.push(item.id);
+                if (that.currentRole.hasPermList.indexOf(item.id) == -1) {
+                    addPermission.push(item);
+                }
+            }
+            if (addPermission.length > 0) {
+                let rolPerList = [];
+                for (let item of addPermission) {
+                    rolPerList.push({
+                        permissionId: item.id,
+                        roleId: that.currentRole.id
+                    });
+                }
+                axios
+                    .post("/sysRolePermission/all", rolPerList)
+                    .then(function(response) {
+                        if (response.data.code == 0) {
+                            that.$Message.success("添加权限成功");
+                            that.getRolePermList();
+                        }
+                    });
+                return;
+            }
+            //删除权限
+            let removePermissions = [];
+            for (let item of that.rolePermList) {
+                if (permissionIds.indexOf(item.permissionId) == -1) {
+                    removePermissions.push(item);
+                }
+            }
+            if (removePermissions) {
+                let ids = "";
+                for (let item of removePermissions) {
+                    ids += item.id + "_";
+                }
+                axios
+                    .delete("/sysRolePermission/" + ids)
+                    .then(function(response) {
+                        if (response.data.code == 0) {
+                            that.$Message.success("删除权限成功");
+                            that.getRolePermList();
+                        }
+                    });
+            }
         }
-      ],
-      tableData: [],
-      selectedItems: []
-    };
-  },
-  methods: {
-    getData() {
-      let that = this;
-      let urlStr = "/sysUser/page";
-      axios
-        .get(urlStr, {
-          params: { keyword: this.keyword }
-        })
-        .then(function(response) {
-          if (response.data) {
-            that.tableData = response.data.list;
-          }
-        })
-        .catch(function(error) {
-          console.log(error);
-        });
     },
-    submitForm() {
-      let that = this;
-      let urlStr = "/sysUser";
-      if (this.formItem.id) {
-        //修改
-        axios
-          .put(urlStr, this.formItem)
-          .then(function(response) {
-            console.log(response);
-            if (response.data.code == 0) {
-              that.getData();
-            } else {
-            }
-          })
-          .catch(function(error) {
-            console.log(error);
-          });
-      } else {
-        //新建
-        axios
-          .post(urlStr, this.formItem)
-          .then(function(response) {
-            console.log(response);
-            if (response.data.code == 0) {
-              that.getData();
-            } else {
-            }
-          })
-          .catch(function(error) {
-            console.log(error);
-          });
-      }
-    },
-    remove(ids) {
-      let that = this;
-      let urlStr = "/sysUser/" + ids;
-      axios
-        .delete(urlStr, {
-          params: {}
-        })
-        .then(function(response) {
-          console.log(response);
-          if (response.data) {
-            that.$Message.success("删除成功");
-            that.getData();
-          }
-        })
-        .catch(function(error) {
-          console.log(error);
-          that.$Message.error("删除失败");
-        });
-    },
-    removeSingl(index){
-      var obj = this.tableData[index];
-      this.remove(obj.id);
-    },
-    removeAll() {
-      // 将选中的行id delete到 /sysUser/
-      let ids='';      
-      this.selectedItems.forEach((item)=>{
-        ids+=item.id+'_';
-      });
-      //console.log(ids);
-      this.remove(ids);
-    },
-    tableSelectChange(items){
-      this.selectedItems=items;
-    },
-    modify(index) {
-      this.formItem = this.tableData[index];
-      this.formItem.disabled = false;
-      this.showModal = true;
-    },
-    show(index) {
-      this.formItem = this.tableData[index];
-      this.formItem.disabled = true;
-      this.showModal = true;
-    },
-    handleSelectAll(status) {
-      this.$refs.selection.selectAll(status);
+    created() {
+        let that = this;
+        Promise.all([that.getRoleList(), that.getpermissionTree()])
+            .then(function() {
+                that.getRolePermList();
+            })
+            .catch(function(err) {
+                that.$Message.error(err);
+            });
     }
-  },
-  created() {
-    this.getData();
-  }
 };
 </script>

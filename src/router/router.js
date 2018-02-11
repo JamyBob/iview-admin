@@ -56,7 +56,7 @@ export const otherRouter = {
     redirect: '/home',
     component: Main,
     children: [
-        { path: 'home', title: {i18n: 'home'}, name: 'home_index', component: resolve => { require(['@/views/home/home.vue'], resolve); } },
+        { path: 'home', title: { i18n: 'home' }, name: 'home_index', component: resolve => { require(['@/views/home/home.vue'], resolve); } },
         { path: 'ownspace', title: '个人中心', name: 'ownspace_index', component: resolve => { require(['@/views/own-space/own-space.vue'], resolve); } },
         { path: 'order/:order_id', title: '订单详情', name: 'order-info', component: resolve => { require(['@/views/advanced-router/component/order-info.vue'], resolve); } }, // 用于展示动态路由
         { path: 'shopping', title: '购物详情', name: 'shopping', component: resolve => { require(['@/views/advanced-router/component/shopping-info.vue'], resolve); } }, // 用于展示带参路由
@@ -90,11 +90,11 @@ export const appRouter = [
     {
         path: '/international',
         icon: 'earth',
-        title: {i18n: 'international'},
+        title: { i18n: 'international' },
         name: 'international',
         component: Main,
         children: [
-            { path: 'index', title: {i18n: 'international'}, name: 'international_index', component: resolve => { require(['@/views/international/international.vue'], resolve); } }
+            { path: 'index', title: { i18n: 'international' }, name: 'international_index', component: resolve => { require(['@/views/international/international.vue'], resolve); } }
         ]
     },
     {
@@ -226,12 +226,29 @@ export const appRouter = [
         icon: 'ios-infinite',
         name: 'sys',
         title: '系统信息维护',
+        access: ['sys'],
         component: Main,
         children: [
-            { path: 'user', title: '用户管理', name: 'user-setting', icon: 'link', component: resolve => { require(['@/views/sys/user.vue'], resolve); } },
-            { path: 'role', title: '角色管理', name: 'role-setting', icon: 'link', component: resolve => { require(['@/views/sys/role.vue'], resolve); } },
-            { path: 'permission', title: '资源管理', name: 'permission-setting', icon: 'link', component: resolve => { require(['@/views/sys/permission.vue'], resolve); } },
-            { path: 'authority', title: '权限管理', name: 'authority-setting', icon: 'link', component: resolve => { require(['@/views/sys/authority.vue'], resolve); } },
+            { path: 'user', title: '用户管理', access: ['sys.user'], name: 'user-setting', icon: 'link', component: resolve => { require(['@/views/sys/user.vue'], resolve); } },
+            { path: 'role', title: '角色管理', access: ['sys.role'],name: 'role-setting', icon: 'link', component: resolve => { require(['@/views/sys/role.vue'], resolve); } },
+            { path: 'permission', title: '资源管理', access: ['sys.permission'], name: 'permission-setting', icon: 'link', component: resolve => { require(['@/views/sys/permission.vue'], resolve); } },
+            { path: 'authority', title: '权限分配', access: ['sys.authority'],name: 'authority-setting', icon: 'link', component: resolve => { require(['@/views/sys/authority.vue'], resolve); } },
+        ]
+    },
+    {
+        path: '/sys-step',
+        icon: 'ios-paper',
+        name: 'sys-step',
+        title: '基础信息维护',
+        component: Main,
+        children: [
+            { path: 'region-info', title: '区划信息维护', name: 'region-info', component: resolve => { require(['@/views/basic-info/region-info.vue'], resolve); } },
+            { path: 'mech-info', title: '机构信息维护', name: 'mech-info', component: resolve => { require(['@/views/basic-info/mech-info.vue'], resolve); } },
+            { path: 'region-diction', title: '区域字典维护', name: 'region-diction', component: resolve => { require(['@/views/basic-info/region-diction.vue'], resolve); } },
+            { path: 'mech-diction', title: '机构字典维护', name: 'mech-diction', component: resolve => { require(['@/views/basic-info/mech-diction.vue'], resolve); } },
+            { path: 'ment-info', title: '机构科室信息维护', name: 'ment-info', component: resolve => { require(['@/views/basic-info/ment-info.vue'], resolve); } },
+            { path: 'personal-info', title: '人员机构关系维护', name: 'personal-info', component: resolve => { require(['@/views/basic-info/personal-info.vue'], resolve); } },
+            { path: 'healthroom-info', title: '卫生室乡村关系维护', name: 'healthroom-info', component: resolve => { require(['@/views/basic-info/healthroom-info.vue'], resolve); } },
         ]
     },
 ];

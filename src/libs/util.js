@@ -44,7 +44,7 @@ util.showThisRoute = function (itAccess, currentAccess) {
     if (Array.isArray(itAccess) && Array.isArray(currentAccess)) {
         //求两个数据的交集
         let intersectionSet = new Set([...new Set(itAccess)].filter(x => new Set(currentAccess).has(x)));
-        return intersectionSet.size>0;//如果有交集则返回true
+        return intersectionSet.size > 0;//如果有交集则返回true
     } else if (typeof itAccess === 'object' && Array.isArray(itAccess)) {
         return util.oneOf(currentAccess, itAccess);
     } else {
@@ -270,6 +270,41 @@ util.checkUpdate = function (vm) {
     });
 };
 
+util.listFilter=function(list, key, pAttr, gAttr) {
+    if (key instanceof Array) {
+        let str = '';
+        for (var item of list) {
+            if (
+                item[pAttr] &&
+                key.indexOf(item[pAttr])!=-1 
+            ) {
+                str+=item[gAttr]+',';
+            }
+        }
+        return str.substr(0,str.length-1);
+    } else {
+        for (var item of list) {
+            if (item[pAttr] && item[pAttr] == key && item[gAttr]) {
+                return item[gAttr];
+            }
+        }
+    }
+};
+
+var getJsonTree = function(data, parentId) {
+    var itemArr = [];
+    for (var i = 0; i < data.length; i++) {
+        var node = data[i];
+        if (node.parentId == parentId) {
+            var newNode = {};
+            newNode=JSON.parse(JSON.stringify(node));
+            newNode.children = getJsonTree(data, node.id);
+            itemArr.push(newNode);
+        }
+    }
+    return itemArr;
+};
+util.getJsonTree=getJsonTree;
 // util.onWheel = function (ele, callback) {
 //     ele.addEventListener('mousewheel', function (e) {
 //         callback(e, e.wheelDelta);

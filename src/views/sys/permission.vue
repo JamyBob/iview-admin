@@ -1,325 +1,255 @@
 <style lang="less">
 @import "../../styles/common.less";
-@import "./demo-crud.less";
 </style>
 
 <template>
     <div>
         <Row>
-           <Col>
-                <Card>
-                    <Button v-permission="['KT Admin']" type="primary" @click="showModal = true; formItem={}" >新建</Button>                    
-                    <Button v-permission="['KT Admin']" type="error" @click="removeAll" >批量删除</Button>
-                    <Input v-model="keyword"  placeholder="按名称搜索" style="width: 200px"></Input>
-                    <Button @click="getData" type="primary" shape="circle" icon="ios-search">Search</Button>
-                    <div class="edittable-con-1">
-                        <Table border ref="selection" :columns="columnsList" :data="tableData" @on-selection-change="tableSelectChange" ></Table>
-                        <Button @click="handleSelectAll(true)">全选</Button>
-                        <Button @click="handleSelectAll(false)">取消全选</Button>
-                    </div>
-                </Card>
+            <Col>
+            <Card>
+                <Button v-permission="['KT Admin']" type="primary" @click="create">新建根资源</Button>
+                <template>
+                    <tree-grid :items='resData' :columns='columns' @on-row-click='rowBtnClick' @on-selection-change='selectionClick'></tree-grid>
+                </template>
+            </Card>
             </Col>
         </Row>
-        <Modal v-model="showModal" @on-ok="submitForm" title="新建用户">
-                            <Form :model="formItem" :label-width="80" >
-                              <FormItem label="用户名">
-                                  <Input v-model="formItem.username" placeholder="名称" ></Input>
-                              </FormItem>
-                              <FormItem label="邮箱">
-                                  <Input v-model="formItem.email" placeholder="邮箱"></Input>
-                              </FormItem>
-                              <FormItem label="手机">
-                                  <Input v-model="formItem.mobile" placeholder="手机"></Input>
-                              </FormItem>
-                              <FormItem label="密码">
-                                  <Input v-model="formItem.password" placeholder="密码"></Input>
-                              </FormItem>
-                              <FormItem label="所属部门">
-                                  <Select v-model="formItem.select">
-                                      <Option value="beijing">New York</Option>
-                                      <Option value="shanghai">London</Option>
-                                      <Option value="shenzhen">Sydney</Option>
-                                  </Select>
-                              </FormItem>
-                              <FormItem label="状态">
-                                  <RadioGroup v-model="formItem.status">
-                                      <Radio label="0">未激活</Radio>
-                                      <Radio label="1">激活</Radio>
-                                      <Radio label="2">锁定</Radio>
-                                  </RadioGroup>
-                              </FormItem>
-                              <FormItem label="角色">
-                                  <CheckboxGroup v-model="formItem.checkbox">
-                                      <Checkbox label="Eat">管理员</Checkbox>
-                                      <Checkbox label="Sleep">用户</Checkbox>
-                                      <Checkbox label="Run">部门经理</Checkbox>
-                                      <Checkbox label="Movie">临时用户</Checkbox>
-                                  </CheckboxGroup>
-                              </FormItem>
-                              <FormItem label="备注">
-                                  <Input v-model="formItem.comment" type="textarea" :autosize="{minRows: 2,maxRows: 5}" placeholder="备注"></Input>
-                              </FormItem>
-                          </Form>
-                    </Modal>
+        <Modal v-model="showViewModal" @on-ok="" title="查看资源">
+            <Form :model="formItem" :label-width="80">
+                <FormItem label="资源名称">
+                    <span> {{formItem.menuName}}</span>
+                </FormItem>
+                <FormItem label="资源类型">
+                    <span> {{formItem.pType}}</span>
+                </FormItem>
+                <FormItem label="资源图标">
+                    <span> {{formItem.icon}}</span>
+                </FormItem>
+                <FormItem label="资源标题">
+                    <span> {{formItem.title}}</span>
+                </FormItem>
+                <FormItem label="层级">
+                    <span> {{formItem.menuLevel}}</span>
+                </FormItem>
+                <FormItem label="排序号">
+                    <span> {{formItem.menuOrder}}</span>
+                </FormItem>
+                <FormItem label="创建用户">
+                    <span> {{formItem.createUserName}}</span>
+                </FormItem>
+                <FormItem label="创建时间">
+                    <span> {{formItem.createTime}}</span>
+                </FormItem>
+                <FormItem label="更新用户">
+                    <span> {{formItem.updateUserName}}</span>
+                </FormItem>
+                <FormItem label="更新时间">
+                    <span> {{formItem.updateTime}}</span>
+                </FormItem>
+            </Form>
+        </Modal>
+        <Modal v-model="showCreateEditModal" @on-ok="submitForm" title="新建资源">
+            <Form :model="formItem" :label-width="80">
+                <FormItem label="资源名称">
+                    <Input v-model="formItem.menuName"></Input>
+                </FormItem>
+                <FormItem label="资源类型">
+                    <Input v-model="formItem.pType"></Input>
+                </FormItem>
+                <FormItem label="资源图标">
+                    <Input v-model="formItem.icon"></Input>
+                </FormItem>
+                <FormItem label="资源标题">
+                    <Input v-model="formItem.title"></Input>
+                </FormItem>
+            </Form>
+        </Modal>
     </div>
 </template>
 
 <script>
 import axios from "axios";
-import tableData from "../tables/components/table_data.js";
-import canEditTable from "../tables/components/canEditTable.vue";
+import util from "@/libs/util";
+import TreeGrid from "../main-components/TreeGrid";
 export default {
-  name: "demo-crud",
-  components: {
-    canEditTable
-  },
-  data() {
-    return {
-      keyword: "",
-      showModal: false,
-      formItem: {
-        disabled: false,
-        username: "",
-        email: "",
-        mobile: "",
-        password: "",
-        select: "",
-        status: "0",
-        checkbox: [],
-        switch: true,
-        comment: ""
-      },
-      columnsList: [
-        {
-          type: "selection",
-          width: 60,
-          align: "center"
-        },
-        {
-          title: "ID",
-          align: "center",
-          key: "id"
-        },
-        {
-          title: "父权限",
-          align: "center",
-          key: "parentId"
-        },
-        {
-          title: "资源名",
-          align: "center",
-          key: "menuName"
-        },
-        {
-          title: "类型",
-          align: "center",
-          key: "pType"
-        },
-        {
-          title: "标题",
-          align: "center",
-          key: "title"
-        },        
-        {
-          title: "级别",
-          align: "center",
-          key: "menuLevel"
-        },     
-        {
-          title: "排序号",
-          align: "center",
-          key: "menuOrder"
-        },
-            
-        {
-          title: "创建用户",
-          align: "center",
-          key: "createUserId"
-        },
-            
-        {
-          title: "创建时间",
-          align: "center",
-          key: "createTime"
-        },
-            
-        {
-          title: "更新用户",
-          align: "center",
-          key: "updateUserId"
-        },
-            
-        {
-          title: "更新时间",
-          align: "center",
-          key: "updateTime"
-        },
-        {
-          title: "操作",
-          align: "center",
-          width: 180,
-          key: "action",
-          render: (h, params) => {
-            return h("div", [
-              h(
-                "Button",
+    name: "permission-setting",
+    components: { TreeGrid },
+    data() {
+        return {
+            reqParams: { keyword: "", orderBy: "MENU_ORDER" },
+            resData: [],
+            showModal: false,
+            formItem: {},
+            selectedItems: [],
+            showCreateEditModal: false,
+            showViewModal: false,
+            columns: [
                 {
-                  props: {
-                    type: "primary",
-                    size: "small"
-                  },
-                  on: {
-                    click: () => {
-                      this.show(params.index);
-                    }
-                  }
+                    title: "资源名称",
+                    key: "menuName"
                 },
-                "查看"
-              ),
-              h(
-                "Button",
                 {
-                  props: {
-                    type: "primary",
-                    size: "small"
-                  },
-                  on: {
-                    click: () => {
-                      this.modify(params.index);
-                    }
-                  }
+                    title: "资源类型",
+                    key: "pType"
                 },
-                "修改"
-              ),
-              h("Button", [
-                h(
-                  "Poptip",
-                  {
-                    props: {
-                      confirm: true,
-                      title: "确定要删除吗！",
-                      type: "error",
-                      size: "small"
-                    },
-                    on: {
-                      "on-ok": () => {
-                        this.removeSingl(params.index);
-                      },
-                      "on-cancel": () => {}
+                {
+                    title: "资源标题",
+                    key: "title"
+                },
+                {
+                    title: "操作",
+                    type: "action",
+                    actions: [
+                        {
+                            type: "primary",
+                            text: "查看"
+                        },
+                        {
+                            type: "primary",
+                            text: "新建子资源"
+                        },
+                        {
+                            type: "primary",
+                            text: "编辑"
+                        },
+                        {
+                            type: "primary",
+                            text: "上移"
+                        },
+                        {
+                            type: "primary",
+                            text: "下移"
+                        },
+                        {
+                            type: "error",
+                            text: "删除"
+                        }
+                    ]
+                }
+            ]
+        };
+    },
+    methods: {
+        getData() {
+            let that = this;
+            let urlStr = "/sysPermission/all";
+            axios
+                .get(urlStr, { params: this.reqParams })
+                .then(function(response) {
+                    if (response.data) {
+                        that.resData = util.getJsonTree(response.data, "#");
                     }
-                  },
-                  "删除"
-                )
-              ])
-            ]);
-          }
+                });
+        },
+        submitForm() {
+            let that = this;
+            let urlStr = "/sysPermission";
+            if (this.formItem.id) {
+                //修改
+                axios.put(urlStr, this.formItem).then(function(response) {
+                    if (response.data.code == 0) {
+                        that.getData();
+                    }
+                });
+            } else {
+                //新建
+                axios.post(urlStr, this.formItem).then(function(response) {
+                    if (response.data.code == 0) {
+                        that.getData();
+                    } else {
+                        that.$Message.error(response.data.msg);
+                    }
+                });
+            }
+        },
+        create() {
+            this.formItem = {};
+            this.formItem.parentId = "#";
+            this.formItem.menuLevel = 0;
+            this.formItem.menuOrder = 0;
+            this.showCreateEditModal = true;
+        },
+        showViewDialog() {
+            let that = this;
+            var getCreUsr = new Promise(function(resolve, reject) {
+                axios
+                    .get("/sysUser/" + that.formItem.createUserId)
+                    .then(function(response) {
+                        if (response.data) {
+                            that.formItem.createUserName = response.data.name;
+                        } else {
+                            that.formItem.createUserName = "未查到创建用户";
+                        }
+                        resolve();
+                    });
+            });
+            var getUpUsr = new Promise(function(resolve, reject) {
+                axios
+                    .get("/sysUser/" + that.formItem.updateUserId)
+                    .then(function(response) {
+                        if (response.data) {
+                            that.formItem.updateUserName = response.data.name;
+                        } else {
+                            that.formItem.updateUserName = "未查到更新用户";
+                        }
+                        resolve();
+                    });
+            });
+            Promise.all([getCreUsr, getUpUsr])
+                .then(function() {
+                    that.showViewModal = true;
+                })
+                .catch(function(err) {
+                    that.$Message.error(err);
+                    that.showViewModal = true;
+                });
+        },
+        remove(ids) {
+            let that = this;
+            let urlStr = "/sysPermission/" + ids;
+            axios
+                .delete(urlStr, {
+                    params: {}
+                })
+                .then(function(response) {
+                    if (response.data.code == 0) {
+                        that.$Message.success("删除成功");
+                        that.getData();
+                    }
+                });
+        },
+        rowBtnClick(item, index, event, text) {
+            this.formItem = JSON.parse(JSON.stringify(item));
+            if (text == "查看") {
+                this.showViewDialog();
+            } else if (text == "新建子资源") {
+                this.formItem = {};
+                this.formItem.parentId = item.id;
+                this.formItem.menuLevel = 0;
+                if (this.formItem.children) {
+                    this.formItem.menuOrder = this.formItem.children.length;
+                } else {
+                    this.formItem.menuOrder = 0;
+                }
+                this.showCreateEditModal = true;
+            } else if (text == "编辑") {
+                this.showCreateEditModal = true;
+            } else if (text == "删除") {
+                this.remove(item.id);
+            } else if (text == "上移") {
+                this.formItem.menuOrder = parseInt(this.formItem.menuOrder) - 1;
+                this.submitForm();
+            } else if (text == "下移") {
+                this.formItem.menuOrder = parseInt(this.formItem.menuOrder) + 1;
+                this.submitForm();
+            }
+        },
+        selectionClick(arr) {
+            //console.log("选中数据id数组:" + arr);
         }
-      ],
-      tableData: [],
-      selectedItems: []
-    };
-  },
-  methods: {
-    getData() {
-      let that = this;
-      let urlStr = "/sysPermission/page";
-      axios
-        .get(urlStr, {
-          params: { keyword: this.keyword }
-        })
-        .then(function(response) {
-          if (response.data) {
-            that.tableData = response.data.list;
-          }
-        })
-        .catch(function(error) {
-          console.log(error);
-        });
     },
-    submitForm() {
-      let that = this;
-      let urlStr = "/sysPermission";
-      if (this.formItem.id) {
-        //修改
-        axios
-          .put(urlStr, this.formItem)
-          .then(function(response) {
-            console.log(response);
-            if (response.data.code == 0) {
-              that.getData();
-            } else {
-            }
-          })
-          .catch(function(error) {
-            console.log(error);
-          });
-      } else {
-        //新建
-        axios
-          .post(urlStr, this.formItem)
-          .then(function(response) {
-            console.log(response);
-            if (response.data.code == 0) {
-              that.getData();
-            } else {
-            }
-          })
-          .catch(function(error) {
-            console.log(error);
-          });
-      }
-    },
-    remove(ids) {
-      let that = this;
-      let urlStr = "/sysPermission/" + ids;
-      axios
-        .delete(urlStr, {
-          params: {}
-        })
-        .then(function(response) {
-          console.log(response);
-          if (response.data) {
-            that.$Message.success("删除成功");
-            that.getData();
-          }
-        })
-        .catch(function(error) {
-          console.log(error);
-          that.$Message.error("删除失败");
-        });
-    },
-    removeSingl(index){
-      var obj = this.tableData[index];
-      this.remove(obj.id);
-    },
-    removeAll() {
-      // 将选中的行id delete到 /sysPermission/
-      let ids='';      
-      this.selectedItems.forEach((item)=>{
-        ids+=item.id+'_';
-      });
-      //console.log(ids);
-      this.remove(ids);
-    },
-    tableSelectChange(items){
-      this.selectedItems=items;
-    },
-    modify(index) {
-      this.formItem = this.tableData[index];
-      this.formItem.disabled = false;
-      this.showModal = true;
-    },
-    show(index) {
-      this.formItem = this.tableData[index];
-      this.formItem.disabled = true;
-      this.showModal = true;
-    },
-    handleSelectAll(status) {
-      this.$refs.selection.selectAll(status);
+    created() {
+        this.getData();
     }
-  },
-  created() {
-    this.getData();
-  }
 };
 </script>

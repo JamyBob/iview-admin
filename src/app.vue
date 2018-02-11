@@ -35,4 +35,16 @@ html,body{
     width: 100%;
     height: 100%;
 }
+::-webkit-scrollbar-track {
+    background-color: #f5f5f5;
+}
+
+::-webkit-scrollbar {
+    width: 6px;
+    background-color: #f5f5f5;
+}
+
+::-webkit-scrollbar-thumb {
+    background-color: #999;
+}
 </style>

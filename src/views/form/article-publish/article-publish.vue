@@ -328,7 +328,6 @@ export default {
         this.classificationList = [
             {
                 title: 'Vue实例',
-                expand: true,
                 children: [
                     {
                         title: '数据与方法',
