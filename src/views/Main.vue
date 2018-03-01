@@ -3,12 +3,42 @@
 </style>
 <template>
     <div class="main" :class="{'main-hide-text': shrink}">
+        <div class="top-menue-con">
+            <div class="top-logo">
+                <img src="../images/top-logo.jpg" key="max-logo" />
+            </div>
+            <ul class="top-menue">
+                <li v-for="item in menuList" @click='onTopMenueClick(item)'>{{ item.title }}</li>
+            </ul>
+            <div class="header-avator-con">
+                <full-screen v-model="isFullScreen" @on-change="fullscreenChange"></full-screen>
+                <!-- <lock-screen></lock-screen>
+                <message-tip v-model="mesCount"></message-tip>
+                <theme-switch></theme-switch> -->
+
+                <div class="user-dropdown-menu-con">
+                    <Row type="flex" justify="end" align="middle" class="user-dropdown-innercon">
+                        <Dropdown transfer trigger="click" @on-click="handleClickUserDropdown">
+                            <a href="javascript:void(0)">
+                                <span class="main-user-name">{{ userName }}</span>
+                                <Icon type="arrow-down-b"></Icon>
+                            </a>
+                            <DropdownMenu slot="list">
+                                <DropdownItem name="ownSpace">个人中心</DropdownItem>
+                                <DropdownItem name="loginout" divided>退出登录</DropdownItem>
+                            </DropdownMenu>
+                        </Dropdown>
+                        <Avatar :src="avatorPath" style="background: #619fe7;margin-left: 10px;"></Avatar>
+                    </Row>
+                </div>
+            </div>
+        </div>
         <div class="sidebar-menu-con" :style="{width: shrink?'60px':'200px', overflow: shrink ? 'visible' : 'auto'}">
-            <shrinkable-menu :shrink="shrink" @on-change="handleSubmenuChange" :theme="menuTheme" :before-push="beforePush" :open-names="openedSubmenuArr" :menu-list="menuList">
-                <div slot="top" class="logo-con">
+            <shrinkable-menu :shrink="shrink" @on-change="handleSubmenuChange" :theme="menuTheme" :before-push="beforePush" :open-names="openedSubmenuArr" :menu-list="subMenue">
+                <!-- <div slot="top" class="logo-con">
                     <img v-show="!shrink" src="../images/logo.jpg" key="max-logo" />
                     <img v-show="shrink" src="../images/logo-min.jpg" key="min-logo" />
-                </div>
+                </div> -->
             </shrinkable-menu>
         </div>
         <div class="main-header-con" :style="{paddingLeft: shrink?'60px':'200px'}">
@@ -23,12 +53,11 @@
                         <breadcrumb-nav :currentPath="currentPath"></breadcrumb-nav>
                     </div>
                 </div>
-                <div class="header-avator-con">
+                <!-- <div class="header-avator-con">
                     <full-screen v-model="isFullScreen" @on-change="fullscreenChange"></full-screen>
                     <lock-screen></lock-screen>
                     <message-tip v-model="mesCount"></message-tip>
                     <theme-switch></theme-switch>
-
                     <div class="user-dropdown-menu-con">
                         <Row type="flex" justify="end" align="middle" class="user-dropdown-innercon">
                             <Dropdown transfer trigger="click" @on-click="handleClickUserDropdown">
@@ -44,7 +73,7 @@
                             <Avatar :src="avatorPath" style="background: #619fe7;margin-left: 10px;"></Avatar>
                         </Row>
                     </div>
-                </div>
+                </div> -->
             </div>
             <div class="tags-con">
                 <tags-page-opened :pageTagsList="pageTagsList"></tags-page-opened>
@@ -135,7 +164,8 @@ export default {
                 password: [
                     { required: true, message: "密码不能为空", trigger: "blur" }
                 ]
-            }
+            },
+            subMenue:[]
         };
     },
     computed: {
@@ -176,6 +206,19 @@ export default {
             this.messageCount = messageCount.toString();
             this.checkTag(this.$route.name);
             this.$store.commit("setMessageCount", 3);
+            let menu = this.$store.state.app.menuList;
+            let num = this.$store.state.app.openedSubmenuArr[0];
+            // if(num = 'access'){
+            //     let index = '0';
+            // }else if(num = 'accesstest'){
+            //     let index = '1';
+            // }else if(num = '国际化'){
+            //     let index = '2';
+            // }else if(num = '组件'){
+            //     let index = '3';
+            // }
+            // console.log(index);
+            this.subMenue=menu[0].children;
         },
         toggleClick() {
             this.shrink = !this.shrink;
@@ -262,6 +305,10 @@ export default {
                         });
                 }
             });
+        },
+        onTopMenueClick(item){
+            this.subMenue=item.children;
+            // console.log(this.subMenue);
         }
     },
     watch: {

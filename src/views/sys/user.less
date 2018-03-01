@@ -1,0 +1,132 @@
+.usermain{
+    background:#ffffff;
+    border-top:3px solid #ddd;
+}
+.ivu-card{
+    border-radius:0;
+}
+.ivu-card-body{
+    padding:0;
+}
+.userbtn{
+    padding:10px;
+    border-bottom:1px solid #ddd;
+    .ivu-btn-primary{
+        background-color:transparent;
+        border-color:transparent;
+    }
+}
+.ivu-btn-nobtn{
+    background:transparent;
+    border:0;
+    font-size:16px;
+    color:#333;
+    height:36px;
+    padding:5px 10px;
+    cursor:pointer;
+    outline:none;
+    img{
+        vertical-align:middle;
+        margin-top:-2px;
+    }
+    span{
+        display:inline-block;
+        line-height:24px;
+        margin-left:5px;
+        padding:0 3px 2px 3px;
+    }
+    &:hover span span{
+        color:#2d8cf0;
+        border-bottom:1px solid #2d8cf0;
+    }
+}
+.ivu-btn-error{
+    background:transparent;
+    border:0;
+    font-size:16px;
+    color:#333;
+    height:36px;
+    padding:5px 10px;
+    cursor:pointer;
+    outline:none;
+    img{
+        vertical-align:middle;
+        margin-top:-2px;
+    }
+    span{
+        display:inline-block;
+        line-height:24px;
+        margin-left:5px;
+        padding:0 3px 2px 3px;
+    }
+    &:hover span span{
+        color:#2d8cf0;
+        border-bottom:1px solid #2d8cf0;
+    }
+}
+.usersearch{
+    padding:10px 20px;
+    .label-name{
+        display:inline-block;
+        font-size:14px;
+        vertical-align:middle;
+        margin-right:5px;
+    }
+    .marin-left-5{
+        margin-left:5px;
+    }
+}
+.ivu-btn-primary{
+    background-color:#19be6b;
+    border-color:#19be6b;
+}
+.edittable-con-1{
+    padding:0 20px 10px;
+}
+.ivu-table table tr th{
+    padding:0 5px;
+    text-align:center;
+}
+.ivu-table table tr td{
+    padding:0 5px;
+}
+.ivu-table .ivu-table-center{
+    text-align:center;
+}
+/*隐藏掉我们模型的checkbox*/
+.usercheck .ivu-checkbox {
+    appearance: none;
+    -webkit-appearance: none;
+    outline: none;
+    display: none;
+}
+/*未选中时*/        
+.usercheck .ivu-checkbox+span {
+    width: 16px;
+    height: 16px;
+    background-color: red;
+    display: inline-block;
+    background: url(../../images/sys-step/icon_checkbox.png) no-repeat;
+    background-position-x: 0px;
+    background-position-y: -25px;
+    position: relative;
+    top: 3px;
+}
+/*选中checkbox时,修改背景图片的位置*/            
+.usercheck .ivu-checkbox:checked+span {
+    background-position: 0 0px
+}
+.clear {
+    display:block;
+    zoom:1;
+}
+.clear:after {
+    clear: both;
+    content:".";
+    display: block;
+    height: 0;
+    visibility: hidden;
+}
+.pertree{
+    padding:10px 20px;
+}

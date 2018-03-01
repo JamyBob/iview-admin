@@ -68,10 +68,10 @@
                         </td>
                         <td>
                       <div v-if="user.choise == '1'">
-                      <button type="button"  class="ivu-btn-edit" @click="dictDz(user.id,'0')"><span>取消选择</span></button>
+                      <button type="button"  class="ivu-btn-edit" ><span>已选择</span></button>
                        </div>
                        <div v-if="user.choise == '0'">
-                      <button type="button"  class="ivu-btn-edit" @click="dictDz(user.id,'1')"><span>选择</span></button>
+                      <button type="button"  class="ivu-btn-edit" @click="dictDz(user.id)"><span>未选择</span></button>
                        </div>
                         </td>
                      <!--  <td style="text-align:center;"><button type="button" class="ivu-btn-edit"><span>查看</span></button>
@@ -228,6 +228,7 @@ export default {
         .then(function(response) {
           if (response.data) {
             console.log(response.data);
+            alert(response.data.msg);
             that.getData();
            // alert(response.data.msg);
            // that.users = response.data.result;

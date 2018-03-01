@@ -16,10 +16,6 @@
       </Row>
       <Row>
         <div class="areasearch">
-          <!-- <span class="label-name">区划级别</span>
-          <Select style="width:200px" clearable v-model="reqParams.areaNature" placeholder="请选择区划级别" @on-change="selectChange">
-            <Option v-for="item in articleStateList" :value="item.id" :key="item.id">{{ item.pFunDesc }}</Option>
-          </Select> -->
           <span class="label-name marin-left-5">区划编码</span>
           <Input v-model="reqParams.areacode" clearable  placeholder="请输入区划编码" style="width: 200px" />
           <span class="label-name marin-left-5">区划名称</span>
@@ -36,44 +32,56 @@
              <template>
               <Table v-show="tableShow"  class="mechtable" border ref="selection" :columns="columnsList" :data="areas" ></Table>
               <Page v-show="tableShow" style="float:right" :total="pages*size" :current="pageNum" :page-size="reqParams.pageSize" :page-size-opts="pageSizeOpts" @on-change="onPageChanged" @on-page-size-change="onPageSzieChanged" show-elevator show-sizer show-total></Page>
-                <!-- <Row>
-                    <Col span="4">
-                        <Button @click="handleSelectAll(true)">全选</Button>
-                        <Button @click="handleSelectAll(false)">取消全选</Button>
-                    </Col>
-                    <Col span="20">
-                        <Page v-show="tableShow" style="float:right" :total="pages*size" :current="pageNum" :page-size="reqParams.pageSize" :page-size-opts="pageSizeOpts" @on-change="onPageChanged" @on-page-size-change="onPageSzieChanged" show-elevator show-sizer></Page>
-                    </Col>
-                </Row> -->
                 </template>
       </Row>
     </div>
-    <Modal v-model="showModal" @on-ok="submitForm" title="新建区域">
-      <Form :model="addItem" :label-width="80">
+    <Modal v-model="showModal" @on-ok="submitForm" title="新建区域" :loading="loading">
+      <Form ref="addItem" :model="addItem" :label-width="80" :rules="ruleValidate">
         <FormItem label="上级区域">
           <Input v-model="addParentName" placeholder="上級区域" readonly></Input>
         </FormItem>
         <FormItem label="区域性质">
           <!-- <Input v-model="addNature" placeholder="区域性质"></Input> -->
-           <Select clearable v-model="addItem.areaNature" placeholder="请选择区划级别" @on-change="">
+           <Select v-model="addItem.areaNature" placeholder="请选择区划级别" @on-change="">
             <Option v-for="item in addDictList" :value="item.id" :key="item.id">{{ item.pFunDesc }}</Option>
           </Select>
         </FormItem>
-        <FormItem label="区域名称">
-          <Input v-model="addItem.areaname" placeholder="区域名称"></Input>
+        <FormItem label="区域名称" prop="areaname">
+          <Input clearable v-model="addItem.areaname" placeholder="区域名称"></Input>
         </FormItem>
-        <FormItem label="区域编码">
-         <Row>
-            <Col span="14"><Input v-model="parentCode" placeholder="区域编码" readonly style="text-align: right;"></Input></Col>
-            <Col span="10"><Input v-model="addCode" placeholder="区域编码" maxlength="3"></Input></Col>
-         </Row>
+        <FormItem label="区域编码" prop="addCode">        
+         <label style="padding:10px 5px 10px 0">{{parentCode}}</label><Input  ref="addCode" v-model="addItem.addCode" placeholder="区域编码" maxlength=3 style="width:60%;"></Input>
         </FormItem>
-        <!-- <FormItem label="状态">
+      </Form>
+    </Modal>
+    <Modal v-model="editModal" @on-ok="submitForm" title="修改区域">
+      <Form ref="formItem" :model="formItem" :label-width="80" :rules="ruleValidate">
+         <FormItem label="区域名称" prop="areaname">
+          <Input v-model="formItem.areaname" placeholder="区域名称"></Input>
+        </FormItem>
+        <FormItem label="区域编码"  prop="areacode">
+         <Input v-model="formItem.areacode" placeholder="区域编码"></Input>
+        </FormItem>
+        <FormItem label="上级区域">
+          <!-- <Input v-model="formItem.parentName" placeholder="上級区域" readonly></Input> -->
+          <Select v-model="formItem.parentId" placeholder="请选择区划级别">
+            <Option v-for="item in parentAreaList" :value="item.id" :key="item.id">{{ item.areaname }}</Option>
+          </Select>
+        </FormItem>
+        <FormItem label="区域性质">
+          <label style="padding:10px 5px 10px 0">{{formItem.aNatureName}}</label>
+        </FormItem>
+        <FormItem  label="所属片区" ref="child">
+          <Select v-model="formItem.villageArea" clearable placeholder="请选择片区">
+            <Option v-for="item in sliceList" :value="item.id" :key="item.id">{{ item.areaname }}</Option>
+          </Select>
+        </FormItem>
+        <FormItem label="状态">
           <RadioGroup v-model="formItem.status">
-            <Radio label="0">正常</Radio>
-            <Radio label="1">停用</Radio>
+            <Radio label="1">正常</Radio>
+            <Radio label="0">停用</Radio>
           </RadioGroup>
-        </FormItem> -->
+        </FormItem>
       </Form>
     </Modal>
   </div>
@@ -91,6 +99,7 @@ export default {
         return {
             reqParams: { areaname: "",areacode: "",areaNature: "", pageNum: 1, pageSize: 10, orderBy: "areacode",areaId:""},
             showModal: false,
+            editModal:false,
             treeShow: true,
             tableShow: false,
             statusBtn:"正常",
@@ -107,6 +116,17 @@ export default {
                 status: "1",
                 villageArea: ""
             },
+            ruleValidate: {
+                areaname: [
+                    { required: true, message: '区域名称不能为空', trigger: 'blur' }
+                ],
+                addCode: [
+                    { required: true, message: '区域编码尾数位不能少于2位',min: 2, max:3, trigger: 'blur' }
+                ],
+                areacode: [
+                    { required: true, message: '区域编码不能为空', trigger: 'blur' }
+                ]
+            },
             addItem: {
                 areaname: "",
                 areacode: "",
@@ -114,7 +134,8 @@ export default {
                 areaNature: "",
                 villageNature: "",
                 status: "1",
-                villageArea: ""
+                villageArea: "",
+                addCode:""
             },
             columns:[
                 {
@@ -139,7 +160,7 @@ export default {
                 },
                 {
                     title: "村所属片区",
-                    key: "villageArea"
+                    key: "sliceName"
                 },{
                     title: "区划状态",
                     type: "actions", 
@@ -156,20 +177,14 @@ export default {
                 },
                 {
                     title: "操作",
-                    width: 110,
+                    width: 60,
                     type: "action",
                     align: "center",
-                    actions: [{
-                        type: 'default',
-                        text: '查看',
-                    }, {
+                    actions: [ {
                         type: 'default',
                         text: '编辑'
                     }],
                     actionn: [{
-                        type: 'default',
-                        text: '查看',
-                    }, {
                         type: 'default',
                         text: '编辑'
                     }]
@@ -197,7 +212,7 @@ export default {
                 },
                 {
                     title: "村所属片区",
-                    key: "villageArea"
+                    key: "sliceName"
                 }, {
                     title: '机构状态',
                     key: "action",
@@ -215,7 +230,7 @@ export default {
                                 click: () => {
                                 // this.show(params.index);
                                 console.log(params.row.status);
-                                this.changeStatus(params.index,params.row.status);
+                                this.changeStatus(params.index,params.row);
                                 // this.changeStatus(params.index,'0');
                                 }
                             }
@@ -235,7 +250,7 @@ export default {
                                 let that = this;
                                 // this.show(params.index);
                                 console.log("352532523532"+params.row.status);
-                                this.changeStatus(params.index,params.row.status);
+                                this.changeStatus(params.index,params.row);
                                 }
                             }
                             },
@@ -255,21 +270,21 @@ export default {
                     className: "infotable",
                     render: (h, params) => {
                         return h("div", [
-                        h(
-                            "Button",
-                            {
-                            props: {
-                                type: "default",
-                                size: "small"
-                            },
-                            on: {
-                                click: () => {
-                                this.show(params.index);
-                                }
-                            }
-                            },
-                            "查看"
-                        ),
+                        // h(
+                        //     "Button",
+                        //     {
+                        //     props: {
+                        //         type: "default",
+                        //         size: "small"
+                        //     },
+                        //     on: {
+                        //         click: () => {
+                        //         this.show(params.index);
+                        //         }
+                        //     }
+                        //     },
+                        //     "查看"
+                        // ),
                         h(
                             "Button",
                             {
@@ -288,117 +303,6 @@ export default {
                         ]);
                     }
                 }
-                // // {
-                // //     type: "selection",
-                // //     width: 60,
-                // //     align: "center"
-                // // },
-                // // {
-                // //     title: "ID",
-                // //     align: "center",
-                // //     key: "id",
-                // //     hidden:true
-                // // },
-                // {
-                //     title: "区划状态",
-                //     align: "center",
-                //     key: "status",
-                //     render: (h, params) => {
-                //         let s = params.row.status;
-                //         if(s==1){
-                //             this.statusBtn="正常";
-                //         }else{
-                //             this.statusBtn="停用";
-                //         }
-                //         return h("div", [
-                //             h(
-                //                 "Button",
-                //                 {
-                //                     props: {
-                //                         type: "primary",
-                //                         size: "small"
-                //                     },
-                //                     on: {
-                //                         click: () => {
-                //                             this.changeStatus(params.index,s);
-                //                         }
-                //                     }
-                //                 },
-                //                 this.statusBtn
-                //             )
-                //         ]);
-                //     }
-                // },
-                // {
-                //     title: "操作",
-                //     align: "center",
-                //     width: 180,
-                //     key: "action",
-                //     render: (h, params) => {
-                //         return h("div", [
-                //             h(
-                //                 "Button",
-                //                 {
-                //                     props: {
-                //                         type: "primary",
-                //                         size: "small"
-                //                     },
-                //                     on: {
-                //                         click: () => {
-                //                             this.show(params.index);
-                //                         }
-                //                     }
-                //                 },
-                //                 "查看"
-                //             ),
-                //             h(
-                //                 "Button",
-                //                 {
-                //                     props: {
-                //                         type: "primary",
-                //                         size: "small"
-                //                     },
-                //                     on: {
-                //                         click: () => {
-                //                             this.modify(params.index);
-                //                         }
-                //                     }
-                //                 },
-                //                 "修改"
-                //             )
-                //         ]);
-                //     }
-                // },
-                // {
-                //     title: "区划编码",
-                //     key: "areacode",
-                //     align: "center"
-                // },
-                // {
-                //     title: "区划名称",
-                //     align: "center",
-                //     key: "areaname"
-                // },
-                // {
-                //     title: "上级区划名称",
-                //     align: "center",
-                //     key: "parentName"
-                // },
-                // {
-                //     title: "行政区划性质",
-                //     align: "center",
-                //     key: "aNatureName"
-                // },
-                // {
-                //     title: "村性质",
-                //     align: "center",
-                //     key: "vNatureName"
-                // },
-                // {
-                //     title: "村所属片区",
-                //     align: "center",
-                //     key: "villageArea"
-                // }
             ],
             articleStateList: [],
             areas: [],
@@ -406,13 +310,15 @@ export default {
             pages: 0,
             size: 0,
             pageSizeOpts: [10,30,45],
-            checkAll: false,
+            checkAll: false, 
             selectedItems: [],
             userNature:"",
             addParentName:"",
             addDictList:[],
-            addCode:"",
-            parentCode:""
+            parentCode:"",
+            parentAreaList:[],
+            sliceList:[],
+            loading:true
         };
     },
     methods: {
@@ -444,8 +350,6 @@ export default {
                     if (response.data) {
                         console.log(response.data.result);
                         let areaInfo = response.data.result;
-                        // that.reqParams.areaId=areaInfo.id;
-                        // that.addItem = areaInfo;
                         that.addParentName=areaInfo.areaname;
                         that.addItem.parentId=areaInfo.id;
                         that.userNature=areaInfo.areaNature;
@@ -468,9 +372,6 @@ export default {
                         that.areas = response.data.result;
                         that.tableShow=false;
                         that.treeShow=true;
-                        // that.pageNum = response.data.pageNum;
-                        // that.pages = response.data.pages;
-                        // that.size = response.data.size;
                     }
                 })
                 .catch(function(error) {
@@ -516,23 +417,20 @@ export default {
                     console.log(error);
                 });
         },
-        changeStatus(index,s){
+        changeStatus(index,dt){
             let that = this;
             let urlStr = "/ehrPwArea";
-            that.formItem = that.areas[index];
+            let s = dt.status;
             if(s=="1"){
-                that.formItem.status=0; 
+                dt.status=0; 
             }else{
-                that.formItem.status=1;
+                dt.status=1;
             }
             axios
-                .put(urlStr, that.formItem)
+                .put(urlStr, dt)
                 .then(function(response) {
                     if (response.data) {
                         console.log(response.data);
-                        that.areas[index].status = that.formItem.status;
-                        alert("状态已改变！");
-                        that.regionSearch();
                     }
                 })
                 .catch(function(error) {
@@ -550,47 +448,54 @@ export default {
                         console.log(response);
                         if (response.data.code == 0) {
                             that.getData();
+                            that.formItem.id="";
+                            that.editModal=false;
                         } else {
+                            setTimeout(() => {
+                                that.loading = false;
+                                that.$nextTick(() => {
+                                    that.loading = true;
+                                });
+                            }, 100);
                         }
                     })
                     .catch(function(error) {
                         console.log(error);
+                        setTimeout(() => {
+                            that.loading = false;
+                            that.$nextTick(() => {
+                                that.loading = true;
+                            });
+                        }, 100);
                     });
             } else {
                 //新建
-                if(that.addCode==""){
-                    alert("区域编码尾数位不能为空");
-                }else{
-                    that.addItem.areacode = that.parentCode+that.addCode;
-                    axios
-                    .post(urlStr, that.addItem)
-                    .then(function(response) {
-                        // console.log(response);
-                        if (response.data.code == 0) {
-                            that.getData();
+                that.$refs['addItem'].validate((valid) => {
+                        if (valid) {
+                            that.addItem.areacode = that.parentCode+that.addItem.addCode;
+                            axios
+                                .post(urlStr, that.addItem)
+                                .then(function(response) {
+                                    if (response.data.code == 0) {
+                                        that.getData();
+                                        that.showModal=false;
+                                    } else {
+                                        that.showModal=true;
+                                        setTimeout(() => {
+                                            that.loading = false;
+                                            that.$nextTick(() => {
+                                                that.loading = true;
+                                            });
+                                        }, 100);
+                                    }
+                                })
+                                .catch(function(error) {
+                                    console.log(error);
+                                });
                         } else {
-                            that.showModal=true;
-                            alert(response.data.msg);
+                            this.$Message.error('Fail!');
                         }
-                    })
-                    .catch(function(error) {
-                        console.log(error);
-                    });
-                }
-            }
-        },
-        editModal() {
-            var index = this.selectedItems - 1;
-            var indexs = this.selectedItems;
-            alert(indexs);
-            if (indexs.length > 1) {
-                alert("只能选择一条数据！");
-            } else if (indexs.length == 0) {
-                alert("请选择一条数据！");
-            } else {
-                // this.formItem = this.users[indexs];
-                // this.formItem.disabled = false;
-                this.showModal = true;
+                });
             }
         },
         onPageSzieChanged(ps) {
@@ -603,48 +508,79 @@ export default {
             this.reqParams.pageNum = pn;
             this.regionSearch();
         },
-        handleSelectAll(status) {
-            this.$refs.selection.selectAll(status);
-        },
-        selectChange(){
-           let t = this.articleStateList.find(item => item.id === this.reqParams.areaNature)['pFunDesc'];
-        },
         addArea(){
             let that = this;
             that.showModal = true;
             let nature="";
             if(that.userNature=="156746886068588558"){//新增市级
                 nature = "156746886068588559";
-                // that.addNature = that.articleStateList.find(item => item.id === nature)['pFunDesc'];
-                // that.addItem={parentName:that.formItem.areaname,parentId:that.formItem.id,areaNature:nature,aNatureName:aNatureName};
                 that.addDictList[0]=that.articleStateList[1];
+                that.$refs.addCode.$el.children[1].maxLength=2;
             }else if(that.userNature=="156746886068588559"){//新增县市级
                 nature = "156746886068588560";
                 that.addDictList[0]=that.articleStateList[2];
+                that.$refs.addCode.$el.children[1].maxLength=2;
             }else if(that.userNature=="156746886068588560"){//新增街道
                 nature = "156746886068588561";
                 that.addDictList[0]=that.articleStateList[3];
                 that.parentCode=that.parentCode.substring(0,6);
+                that.$refs.addCode.$el.children[1].maxLength=3;
             }else if(that.userNature=="156746886068588561"){//新增片区或者村
                 nature = "156746886068588563";
                 that.addDictList[0]=that.articleStateList[5];
                 that.addDictList[1]=that.articleStateList[4];
                 that.parentCode=that.parentCode.substring(0,9);
+                that.$refs.addCode.$el.children[1].maxLength=3;
             } else {
                 return;
             }
             that.addItem.areaNature = nature;
             that.addItem.areaname="";
-            that.addCode="";
+            that.addItem.addCode="";
         },
         rowClick(data, event, index, text) {
+             let that = this;
             console.log('当前行数据1:' + data.status)
             console.log('点击行号:' + index)
             console.log('点击事件:' + event)
             // console.log(text)
             // this.getData();
             // console.log(that.statust)
-            this.changeStatus(index,data.status);
+            if(text=="编辑"){
+                that.editModal=true;
+                if(data.areaNature=="156746886068588563"){
+                    that.$refs.child.$el.hidden=false;
+                }else{
+                    that.$refs.child.$el.hidden=true;
+                }
+                that.formItem=data;
+                let urlStr = "/ehrPwArea/selectPNatureByParentId";
+                axios
+                    .get(urlStr,  {params: {parentId:data.parentId}})
+                    .then(function(response) {
+                        if (response.data) {
+                            console.log("dict"+response.data);
+                            that.parentAreaList = response.data.result;
+                        }
+                    })
+                    .catch(function(error) {
+                        console.log(error);
+                    });
+                urlStr = "/ehrPwArea/selectSlicesByParentId";
+                axios
+                    .get(urlStr,  {params: {parentId:data.parentId}})
+                    .then(function(response) {
+                        if (response.data) {
+                            console.log("dict"+response.data);
+                            that.sliceList = response.data.result;
+                        }
+                    })
+                    .catch(function(error) {
+                        console.log(error);
+                    });
+                }else{
+                    that.changeStatus(index,data);
+                }
         },
         selectionClick(arr) {
             console.log('选中数据id数组:' + arr)
@@ -655,7 +591,41 @@ export default {
         },
         tableSelectChange(items) {
             this.selectedItems = items;
-        }
+        },
+        modify(item) {
+            let that = this;
+            this.formItem = this.areas[item];
+            this.editModal = true;
+            if(this.formItem.areaNature=="156746886068588563"){
+                    that.$refs.child.$el.hidden=false;
+                }else{
+                    that.$refs.child.$el.hidden=true;
+                }
+                let urlStr = "/ehrPwArea/selectPNatureByParentId";
+                axios
+                    .get(urlStr,  {params: {parentId:this.formItem.parentId}})
+                    .then(function(response) {
+                        if (response.data) {
+                            console.log("dict"+response.data);
+                            that.parentAreaList = response.data.result;
+                        }
+                    })
+                    .catch(function(error) {
+                        console.log(error);
+                    });
+                urlStr = "/ehrPwArea/selectSlicesByParentId";
+                axios
+                    .get(urlStr,  {params: {parentId:this.formItem.parentId}})
+                    .then(function(response) {
+                        if (response.data) {
+                            console.log("dict"+response.data);
+                            that.sliceList = response.data.result;
+                        }
+                    })
+                    .catch(function(error) {
+                        console.log(error);
+                    });
+        },
     },
     created() { 
         let user = Cookies.get("user");

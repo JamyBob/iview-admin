@@ -90,7 +90,7 @@ export const appRouter = [
     {
         path: '/international',
         icon: 'earth',
-        title: { i18n: 'international' },
+        title: '国际化',//{ i18n: 'international' },
         name: 'international',
         component: Main,
         children: [
@@ -109,14 +109,20 @@ export const appRouter = [
                 icon: 'compose',
                 name: 'text-editor',
                 title: '富文本编辑器',
-                component: resolve => { require(['@/views/my-components/text-editor/text-editor.vue'], resolve); }
+                // component: resolve => { require(['@/views/my-components/text-editor/text-editor.vue'], resolve); }
+                children: [
+                    { path: 'index', title: '权限管理', name: 'access_index', component: resolve => { require(['@/views/access/access.vue'], resolve); } },
+                ]
             },
             {
                 path: 'md-editor',
                 icon: 'pound',
                 name: 'md-editor',
                 title: 'Markdown编辑器',
-                component: resolve => { require(['@/views/my-components/markdown-editor/markdown-editor.vue'], resolve); }
+                // component: resolve => { require(['@/views/my-components/markdown-editor/markdown-editor.vue'], resolve); }
+                children: [
+                    { path: 'index', title: '权限测试页', name: 'accesstest_index', access: ['KT Admin'], component: resolve => { require(['@/views/access/access-test.vue'], resolve); } },
+                ]
             },
             {
                 path: 'image-editor',
@@ -226,7 +232,6 @@ export const appRouter = [
         icon: 'ios-infinite',
         name: 'sys',
         title: '系统信息维护',
-        access: ['sys'],
         component: Main,
         children: [
             { path: 'user', title: '用户管理', access: ['sys.user'], name: 'user-setting', icon: 'link', component: resolve => { require(['@/views/sys/user.vue'], resolve); } },

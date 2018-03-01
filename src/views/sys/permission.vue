@@ -1,17 +1,21 @@
-<style lang="less">
+<style scoped lang="less">
 @import "../../styles/common.less";
+@import './user.less';
 </style>
 
 <template>
-    <div>
+    <div class="usermain">
         <Row>
             <Col>
-            <Card>
-                <Button v-permission="['KT Admin']" type="primary" @click="create">新建根资源</Button>
-                <template>
-                    <tree-grid :items='resData' :columns='columns' @on-row-click='rowBtnClick' @on-selection-change='selectionClick'></tree-grid>
-                </template>
-            </Card>
+                <div class="userbtn">
+                    <Button v-permission="['KT Admin']" type="primary" class="ivu-btn-nobtn" @click="create"><img src="../../images/sys-step/user_add.png"><span>新建根资源</span></Button>
+                </div>
+                <div class="pertree">
+                    <template>
+                        <tree-grid :items='resData' :columns='columns' @on-row-click='rowBtnClick' @on-selection-change='selectionClick'></tree-grid>
+                    </template> 
+                </div>
+                
             </Col>
         </Row>
         <Modal v-model="showViewModal" @on-ok="" title="查看资源">
@@ -49,20 +53,25 @@
             </Form>
         </Modal>
         <Modal v-model="showCreateEditModal" @on-ok="submitForm" title="新建资源">
-            <Form :model="formItem" :label-width="80">
-                <FormItem label="资源名称">
+            <Form ref="crea_upda_form" :model="formItem" :rules="rules" :label-width="80">
+                <FormItem prop="menuName" label="资源名称">
                     <Input v-model="formItem.menuName"></Input>
                 </FormItem>
-                <FormItem label="资源类型">
+                <FormItem prop="pType" label="资源类型">
                     <Input v-model="formItem.pType"></Input>
                 </FormItem>
-                <FormItem label="资源图标">
+                <FormItem prop="icon" label="资源图标">
                     <Input v-model="formItem.icon"></Input>
                 </FormItem>
-                <FormItem label="资源标题">
+                <FormItem prop="title" label="资源标题">
                     <Input v-model="formItem.title"></Input>
                 </FormItem>
+                <FormItem style="float:right;">
+                    <Button size="large" type="ghost" @click="showCreateEditModal=false">取消</Button>
+                    <Button size="large" type="primary" @click="submitForm('formItem')">确定</Button>
+                </FormItem>
             </Form>
+            <div slot="footer"></div>
         </Modal>
     </div>
 </template>
@@ -99,25 +108,26 @@ export default {
                 {
                     title: "操作",
                     type: "action",
+                    align: "center",
                     actions: [
                         {
-                            type: "primary",
+                            type: "default",
                             text: "查看"
                         },
                         {
-                            type: "primary",
+                            type: "default",
                             text: "新建子资源"
                         },
                         {
-                            type: "primary",
+                            type: "default",
                             text: "编辑"
                         },
                         {
-                            type: "primary",
+                            type: "default",
                             text: "上移"
                         },
                         {
-                            type: "primary",
+                            type: "default",
                             text: "下移"
                         },
                         {
@@ -126,7 +136,37 @@ export default {
                         }
                     ]
                 }
-            ]
+            ],
+            rules: {
+                menuName: [
+                    {
+                        required: true,
+                        message: "资源名称不能为空",
+                        trigger: "blur"
+                    }
+                ],
+                pType:[
+                    {
+                        required: true,
+                        message: "资源类型不能为空",
+                        trigger: "blur"
+                    }
+                ],
+                 icon:[
+                    {
+                        required: true,
+                        message: "资源图标不能为空",
+                        trigger: "blur"
+                    }
+                ],
+                title: [
+                    {
+                        required: true,
+                        message: "资源标题不能为空",
+                        trigger: "blur"
+                    }
+                ]
+            }
         };
     },
     methods: {
@@ -141,26 +181,38 @@ export default {
                     }
                 });
         },
-        submitForm() {
+        submitForm(name) {
             let that = this;
-            let urlStr = "/sysPermission";
-            if (this.formItem.id) {
-                //修改
-                axios.put(urlStr, this.formItem).then(function(response) {
-                    if (response.data.code == 0) {
-                        that.getData();
-                    }
-                });
-            } else {
-                //新建
-                axios.post(urlStr, this.formItem).then(function(response) {
-                    if (response.data.code == 0) {
-                        that.getData();
+            this.$refs.crea_upda_form.validate(valid => {
+                if (valid) {
+                    let urlStr = "/sysPermission";
+                    if (this.formItem.id) {
+                        //修改
+                        axios
+                            .put(urlStr, this.formItem)
+                            .then(function(response) {
+                                if (response.data.code == 0) {
+                                    that.getData();
+                                    that.showCreateEditModal = false;
+                                } else {
+                                    that.$Message.error(response.data.msg);
+                                }
+                            });
                     } else {
-                        that.$Message.error(response.data.msg);
+                        //新建
+                        axios
+                            .post(urlStr, this.formItem)
+                            .then(function(response) {
+                                if (response.data.code == 0) {
+                                    that.getData();
+                                    that.showCreateEditModal = false;
+                                } else {
+                                    that.$Message.error(response.data.msg);
+                                }
+                            });
                     }
-                });
-            }
+                }
+            });
         },
         create() {
             this.formItem = {};

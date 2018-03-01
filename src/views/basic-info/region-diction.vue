@@ -3,6 +3,9 @@
   @import '../../styles/common.less';
   @import './mentinfo.less';
 </style>
+<script src="https://unpkg.com/vue@2.1.8/dist/vue.min.js"></script>
+<script src='http://zengxt.pw/vue-py/vue-py.js'></script>
+
 
 <template>
   <div id="sysuser">
@@ -63,7 +66,7 @@
                         <Button type="primary" size="small" @click="changeStatus(user.id,'1')">停用</Button>
                         </div>
                         </td>
-                        <td style="text-align:center;"><button type="button" class="ivu-btn-edit" ><span>查看</span></button><span style="padding:5px;color:#2d8cf0;">|</span><button type="button" class="ivu-btn-edit" @click="modify(user)"><span>编辑</span></button></td>
+                        <td style="text-align:center;"><button type="button" class="ivu-btn-edit" @click="modify(user)"><span>编辑</span></button></td>
                         <td>
                           <div v-if="user.initialDictionary=='1'">是</div>
                         <div v-if="user.initialDictionary=='0'">否</div>
@@ -72,7 +75,7 @@
                         <td>{{user.pNationalStandards}}</td>
                         <td>{{user.pFunCode}}</td>
                         <td>{{user.pFunDesc}}</td>
-                        <td>{{user.pDesc}}</td>
+                        <td>{{user.pCode}}</td>
                         <td>{{user.pDesc}}</td>
                         <td>{{user.parentId}}</td>
                       </tr>
@@ -87,13 +90,46 @@
     </div>
     <Modal v-model="showModal" @on-ok="submitForm" title="新建字典">
         <Form :model="formItem" :label-width="80" >
-           <FormItem label="申请机构">
+            <FormItem label="申请机构">
                 <Select v-model="formItem.addareacode">
                     <Option v-for="item in articleStateList" :value="item.id " :key="item.id ">{{ item.areaname }}</Option>                
                 </Select>
-            </FormItem>
+            </FormItem> 
+           
           
             <FormItem label="字典名称">
+                <Input v-model="formItem.pFunDesc" placeholder="字典名称" @blur="getPym"></Input>
+            </FormItem>
+            <FormItem label="项目名称">
+                <Select v-model="formItem.pCode"  @on-change="choisepCode" >                   
+                    <Option v-for="item in zdxmList" :value="item.pCode " :key="item.pCode ">{{ item.pDesc }}</Option>
+                </Select>
+            </FormItem>
+            <FormItem label="上级字典">
+                <Select v-model="formItem.parentId">   
+                  <Option v-for="item in zdxlList" :value="item.pFunCode " :key="item.pFunCode ">{{ item.pFunDesc }}</Option>                
+                </Select>
+            </FormItem>
+            <FormItem label="拼音码">
+                <Input v-model="formItem.descCode" placeholder="拼音码"   v-upperfirst='formItem.pFunDesc'></Input>
+            </FormItem>          
+            <FormItem label="备注">
+                <Input v-model="formItem.remarks" type="textarea" :autosize="{minRows: 2,maxRows: 5}" placeholder="备注"></Input>
+                <Input v-model="formItem.pDesc"  placeholder="项目名称" v-show="false"></Input>
+            </FormItem>
+        </Form>
+    </Modal>
+   <Modal v-model="showDictModal" @on-ok="submitForm" title="编辑字典">
+        <Form :model="formItem" :label-width="80" >
+          <div v-if="formItem.initialDictionary=='0'">
+            <FormItem label="申请机构"> 
+                <Select v-model="formItem.addareacode">
+                    <Option v-for="item in articleStateList" :value="item.id " :key="item.id ">{{ item.areaname }}</Option>                
+                </Select>
+            </FormItem> 
+          </div> 
+          
+            <FormItem label="字典名称"> 
                 <Input v-model="formItem.pFunDesc" placeholder="字典名称"></Input>
             </FormItem>
             <FormItem label="项目名称">
@@ -107,7 +143,7 @@
                 </Select>
             </FormItem>
             <FormItem label="拼音码">
-                <Input v-model="formItem.descCode" placeholder="拼音码"></Input>
+                <Input v-model="formItem.descCode" placeholder="拼音码" ></Input>
             </FormItem>          
             <FormItem label="备注">
                 <Input v-model="formItem.remarks" type="textarea" :autosize="{minRows: 2,maxRows: 5}" placeholder="备注"></Input>
@@ -115,7 +151,6 @@
             </FormItem>
         </Form>
     </Modal>
-
       
   </div>
 </template>
@@ -123,6 +158,7 @@
 <script>
 import axios from "axios";
 import * as table from '../tables/data/search';
+
 export default {
   name: "region-diction",
   components: {
@@ -144,6 +180,7 @@ export default {
         remarks: "",
         status: "",
         pDesc :"",
+        
       },
       showDictModal:false,
       searchLevel: '',
@@ -186,8 +223,11 @@ export default {
     modify(item) {
             this.formItem = item;
             this.formItem.disabled = false;
-            this.showModal = true;
+            this.showDictModal = true;
         },
+    getPym(value){
+        getPinyin(value,);
+    },    
     submitForm() {
       let that = this;
       let urlStr = "/ehrPwGlobalDict";
@@ -227,9 +267,7 @@ export default {
     handleSearch3 () {
       this.getData();
     },
-    handleCancel3 () {
-        this.data3 = table.searchTable3;
-    },
+  
      getRegion() {
       let that = this;
       let urlStr = "/ehrPwGlobalDict/getAreaAndpdesc";

@@ -152,6 +152,7 @@ export default {
             return 1
           }
         }
+        // 修改折叠图标位置,0第一行,1第二行
         return 0
       },
         // 设置td宽度,td的align
@@ -511,7 +512,9 @@ table {
 #hl-tree-table>tbody>tr {
     background-color: #fbfbfb;
 }
-
+#hl-tree-table>tbody>tr:hover{
+    background-color: #ebf7ff;
+}
 #hl-tree-table>tbody>.child-tr {
     background-color: #fff;
 }
@@ -535,6 +538,9 @@ table {
     margin: 0;
 }
 .mechtree td:last-child .ivu-btn-default:first-child{
+    margin-right:10px;
+}
+.pertree .ivu-btn-default{
     margin-right:10px;
 }
 .ivu-btn-primary{

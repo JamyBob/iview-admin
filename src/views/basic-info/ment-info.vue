@@ -5,303 +5,392 @@
 </style>
 
 <template>
-  <div id="sysuser">
-    <div class="usermain">
+  <div id="sysdept">
+    <div class="areamain">
       <Row>
         <div class="userbtn">
           <button type="button" class="ivu-btn-nobtn" @click="showModal = true; formItem={}"><img src="../../images/sys-step/user_add.png"><span>添加</span></button>
-          <!-- <button type="button" class="ivu-btn-nobtn" @click="editModal"><img src="../../images/sys-step/user_edit.png"><span>修改</span></button> -->
-          <!-- <button type="button" class="ivu-btn-nobtn"><img src="../../images/sys-step/user_export.png"><span>导出</span></button>
-          <button type="button" class="ivu-btn-nobtn"><img src="../../images/sys-step/user_print.png"><span>打印</span></button> -->
-          <!-- <button type="button" class="ivu-btn-nobtn"><img src="../../images/sys-step/user_cancel.png"><span>停用</span></button> -->
         </div>
       </Row>
       <Row>
-        <div class="usersearch">
-          <!-- <span class="label-name">上级科室</span>
-          <Select style="width:200px" v-model="searchLevel" placeholder="请选择上级科室">
-              <Option v-for="item in articleStateList" :value="item.value" :key="item.value">{{ item.value }}</Option>
-          </Select> -->
-          <span class="label-name marin-left-5">机构名称</span>
-          <Input v-model="searchConName3" placeholder="请输入机构名称" style="width: 200px" />
+        <div class="areasearch">
           <span class="label-name marin-left-5">科室名称</span>
-          <Input v-model="searchConName3" placeholder="请输入科室名称" style="width: 200px" />
-          <span @click="handleSearch3" style="margin: 0 10px;"><Button type="primary">查询</Button></span>
-          <!-- <Button @click="handleCancel3" type="ghost" >取消</Button> -->
+          <Input v-model="reqParams.deptName" clearable placeholder="请输入科室名称" style="width: 200px" />
+          <span @click="getData" style="margin: 0 10px;"><Button type="primary">查询</Button></span>
         </div>
       </Row>
       <Row class="searchable-table-con1" style="padding:0 20px 10px;">
-          <!-- <Table :columns="columnsUser" :data="data3"></Table> -->
           <div class="ivu-table-wrapper">
-            <div class="ivu-table ivu-table-border">
-              <table cellspacing="0" cellpadding="0" style="width:100%;">
-                  <thead>
-                      <tr>
-                          <!-- <th><input type="checkbox" name="" v-model="checkAll" @click="SelectAll"></th> -->
-                          <!-- <th>序号</th> -->
-                          <th>科室状态</th>
-                          <th>操作</th>
-                          <th>科室名称</th>
-                          <th>上级科室</th>
-                          <th>机构名称</th>
-                          <th>创建人员</th>
-                          <th>创建时间</th>
-                          <th>更新人员</th>
-                          <th>更新时间</th>
-                      </tr>
-                  </thead>
-                  <tbody>
-                      <tr v-for ="(user,index) in users">
-                        <!-- <td style="text-align:center;"><input type="checkbox" name="" v-model="selectedItems" :value="user.id"></td> -->
-                        <!-- <td style="text-align:center;">{{index+1}}</td> -->
-                        <td style="text-align:center;"><Button type="primary" size="small">正常</Button></td>
-                        <td style="text-align:center;"><button type="button" class="ivu-btn-edit"><span>查看</span></button><span style="padding:5px;color:#2d8cf0;">|</span><button type="button" class="ivu-btn-edit"><span>编辑</span></button></td>
-                        <td>{{user.username}}</td>
-                        <td>{{user.name}}</td>
-                        <td>{{user.email}}</td>
-                        <td>{{user.phone}}</td>
-                        <td>{{user.website}}</td>
-                        <td></td>
-                        <td></td>
-                      </tr>
-                  </tbody>
-            </table>
-          </div>
+            <Table border ref="selection" :columns="columnsDept" :data="depts" ></Table>
+                <Row>
+                    <!-- <Col span="4">
+                        <Button @click="handleSelectAll(true)">全选</Button>
+                        <Button @click="handleSelectAll(false)">取消全选</Button>
+                    </Col> -->
+                    <Col span="24">
+                        <Page style="float:right" :total="pages*size" :current="pageNum" :page-size="reqParams.pageSize" :page-size-opts="pageSizeOpts" @on-change="onPageChanged" @on-page-size-change="onPageSzieChanged" show-elevator show-sizer></Page>
+                    </Col>
+                </Row>
         </div>
-        <template>
-            <Page :total="users.length" size="small" show-total show-elevator></Page>
-        </template>
       </Row>
-    </div>
-    <Modal v-model="showModal" @on-ok="submitForm" title="新建用户">
-        <Form :model="formItem" :label-width="80" >
-            <FormItem label="用户名">
-                <Input v-model="formItem.username" placeholder="名称" ></Input>
-            </FormItem>
-            <FormItem label="邮箱">
-                <Input v-model="formItem.email" placeholder="邮箱"></Input>
-            </FormItem>
-            <FormItem label="手机">
-                <Input v-model="formItem.mobile" placeholder="手机"></Input>
-            </FormItem>
-            <FormItem label="密码">
-                <Input v-model="formItem.password" placeholder="密码"></Input>
-            </FormItem>
-            <FormItem label="所属部门">
-                <Select v-model="formItem.select">
-                    <Option value="beijing">New York</Option>
-                    <Option value="shanghai">London</Option>
-                    <Option value="shenzhen">Sydney</Option>
-                </Select>
-            </FormItem>
-            <FormItem label="状态">
-                <RadioGroup v-model="formItem.status">
-                    <Radio label="0">未激活</Radio>
-                    <Radio label="1">激活</Radio>
-                    <Radio label="2">锁定</Radio>
-                </RadioGroup>
-            </FormItem>
-            <FormItem label="角色">
-                <CheckboxGroup v-model="formItem.checkbox">
-                    <Checkbox label="Eat">管理员</Checkbox>
-                    <Checkbox label="Sleep">用户</Checkbox>
-                    <Checkbox label="Run">部门经理</Checkbox>
-                    <Checkbox label="Movie">临时用户</Checkbox>
-                </CheckboxGroup>
-            </FormItem>
-            <FormItem label="备注">
-                <Input v-model="formItem.comment" type="textarea" :autosize="{minRows: 2,maxRows: 5}" placeholder="备注"></Input>
-            </FormItem>
-        </Form>
+    <Modal v-model="showModal" @on-ok="submitForm" title="新建科室" :loading="loading">
+      <Form ref="formItem" :model="formItem" :label-width="80" :rules="ruleValidate">
+        <!-- <FormItem label="上级科室">
+          <Input v-model="parentName" placeholder="上級区域" readonly></Input>
+        </FormItem> -->
+        <FormItem label="所属机构">
+           <Input v-model="regionName" placeholder="上級区域" readonly></Input>
+        </FormItem>
+        <FormItem label="区域名称" prop="deptName">
+          <Input clearable v-model="formItem.deptName" placeholder="区域名称"></Input>
+        </FormItem>
+       
+      </Form>
     </Modal>
+    <Modal v-model="editModal" @on-ok="submitForm" @on-cancel="cancelBtn" title="修改科室" :loading="loading">
+      <Form ref="editItem" :model="editItem" :label-width="80" :rules="ruleValidate">
+        <!-- <FormItem label="上级科室">
+          <Input v-model="parentName" placeholder="上級区域" readonly></Input>
+        </FormItem> -->
+        <FormItem label="所属机构">
+           <Input v-model="regionName" placeholder="上級区域" readonly></Input>
+        </FormItem>
+        <FormItem label="区域名称" prop="deptName">
+          <Input clearable v-model="editItem.deptName" placeholder="区域名称"></Input>
+        </FormItem>
+       
+      </Form>
+    </Modal>
+    </div>
   </div>
 </template>
 
 <script>
 import axios from "axios";
 import * as table from '../tables/data/search';
+import Cookies from 'js-cookie';
 export default {
   name: "ment-info",
   components: {
-    
   },
   data() {
     return {
+      reqParams: {pageSize:10,pageNum:1,deptName: "",regionId:"",orderBy: "DEPT_NAME"},
       showModal: false,
+      editModal:false,
+      regionName:"",
       formItem: {
-        disabled: false,
-        username: "",
-        email: "",
-        mobile: "",
-        password: "",
-        select: "",
-        status: "0",
-        checkbox: [],
-        switch: true,
-        comment: ""
+        id:"",
+        deptName:"",
+        regionId:"",
+        status:"1"
       },
-      searchLevel: '',
-      searchConName3: '',
-      articleStateList: [{value: '省'}, {value: '市'}, {value: '县(区)'}, {value: '街道(镇)'}, {value: '片区'}, {value: '村(居委会)'},{value: '村(居委会)'},],
-      // columnsUser: [
-      //   {
-      //     type: "selection",
-      //     align: "center",
-      //     width: 50,
-      //   },
-      //   {
-      //     key:'id',
-      //     title:'序号',
-      //     width: 60,
-      //     align: "center",
-      //   },
-      //   {
-      //     key:'tel',
-      //     title:'机构编码'
-      //   },
-      //   {
-      //     key:'name',
-      //     title:'机构名称'
-      //   },
-      //   {
-      //     key:'website',
-      //     title:'机构级别'
-      //   },
-      //   {
-      //     key:'',
-      //     title:'负责人'
-      //   },
-      //   {
-      //     key:'',
-      //     title:'联系人'
-      //   },
-      //   {
-      //     key:'phone',
-      //     title:'联系电话'
-      //   },
-      //   {
-      //     key:'',
-      //     title:'城镇人口数'
-      //   },
-      //   {
-      //     key:'',
-      //     title:'农村人口数'
-      //   },
-      //   {
-      //     key:'',
-      //     title:'总人口数'
-      //   },
-      //   {
-      //     key:'',
-      //     title:'备注'
-      //   },
-      // ],
-      users: [],
+      editItem: {
+        id:"",
+        deptName:"",
+        regionId:"",
+      },
+        ruleValidate: {
+            deptName: [
+                { required: true, message: '区域名称不能为空', trigger: 'blur' }
+            ]
+        },
+      columnsDept: [
+        {
+          key:'status',
+          title:'科室状态',
+          align: "center",
+          render: (h, params) => {
+                        let s = params.row.status;
+                        if(s==1){
+                            this.statusBtn="正常";
+                        }else{
+                            this.statusBtn="停用";
+                        }
+                        return h("div", [
+                            h(
+                                "Button",
+                                {
+                                    props: {
+                                        type: "primary",
+                                        size: "small"
+                                    },
+                                    on: {
+                                        click: () => {
+                                            this.changeStatus(params.index,s);
+                                        }
+                                    }
+                                },
+                                this.statusBtn
+                            )
+                        ]);
+                    }
+        },
+        {
+          title: "操作",
+          align: "center",
+          width: 180,
+          key: "action",
+          render: (h, params) => {
+              return h("div", [
+                //   h(
+                //       "Button",
+                //       {
+                //           props: {
+                //               type: "primary",
+                //               size: "small"
+                //           },
+                //           on: {
+                //               click: () => {
+                //                   this.show(params.index);
+                //               }
+                //           }
+                //       },
+                //       "查看"
+                //   ),
+                  h(
+                      "Button",
+                      {
+                          props: {
+                              type: "primary",
+                              size: "small"
+                          },
+                          on: {
+                              click: () => {
+                                  this.modify(params.index);
+                              }
+                          }
+                      },
+                      "修改"
+                  )
+              ]);
+          }
+        },
+        {
+          key:'deptName',
+          title:'科室名称'
+        },
+        // {
+        //   key:'parentName',
+        //   title:'上级科室'
+        // },
+        {
+          key:'regionName',
+          title:'机构名称'
+        },
+        {
+          key:'createUser',
+          title:'创建人员'
+        },
+        {
+          key:'createTime',
+          title:'创建时间',
+          // render:(h, params) =>{
+          //     let date = new Date(params.row.createTime);
+          //     return this.formatDate(date,'yyyy-MM-dd hh:mm:ss');
+          // }
+        },
+        {
+          key:'updateUser',
+          title:'更新人员'
+        },
+        {
+          key:'updateTime',
+          title:'更新时间',
+          // render:(h, params) =>{
+          //     let date = new Date(params.row.createTime);
+          //     return this.formatDate(date,'yyyy-MM-dd hh:mm:ss');
+          // }
+        }
+      ],
+      depts: [],
+      pageSize: 0,
+      pageNum: 0,
+      pages: 0,
+      size: 0,
+      pageSizeOpts: [10,30,45],
       checkAll: false,
-      selectedItems: []
+      selectedItems: [],
+      loading:true
     }
   },
   methods: {
     getData() {
-      let that = this;
-      let urlStr = "/sysUser/page";
-      axios
-        .get(urlStr, {
-          params: { keyword: this.keyword }
-        })
-        .then(function(response) {
-          if (response.data) {
-            // console.log(response.data);
-            that.users = response.data.list;
-          }
-        })
-        .catch(function(error) {
-          console.log(error);
-        });
-    },
-    submitForm() {
-      let that = this;
-      let urlStr = "/sysUser";
-      if (this.formItem.id) {
-        //修改
+        let that = this;
+        let urlStr = "/ehrPwDept/getPage";
         axios
-          .put(urlStr, this.formItem)
-          .then(function(response) {
-            console.log(response);
-            if (response.data.code == 0) {
-              that.getData();
-            } else {
-            }
-          })
-          .catch(function(error) {
-            console.log(error);
-          });
-      } else {
-        //新建
+            .get(urlStr, { params: this.reqParams})
+            .then(function(response) {
+                if (response.data) {
+                    console.log(response.data);
+                    that.depts = response.data.list;
+                    that.pageSize = response.data.pageSize;
+                    that.pageNum = response.data.pageNum;
+                    that.pages = response.data.pages;
+                    that.size = response.data.size;
+                }
+            })
+            .catch(function(error) {
+                console.log(error);
+            });
+    },
+    changeStatus(index,s){
+        let that = this;
+        let urlStr = "/ehrPwDept";
+        this.formItem = this.depts[index];
+        if(s==1){
+           this.formItem.status=0; 
+        }else{
+           this.formItem.status=1;
+        }
         axios
-          .post(urlStr, this.formItem)
-          .then(function(response) {
-            // console.log(response);
-            if (response.data.code == 0) {
-              that.getData();
-            } else {
-            }
-          })
-          .catch(function(error) {
-            console.log(error);
-          });
-      }
+            .put(urlStr, this.formItem)
+            .then(function(response) {
+                if (response.data) {
+                    console.log(response.data);
+                }
+            })
+            .catch(function(error) {
+                console.log(error);
+            });
     },
-    editModal(){
-      var index = this.selectedItems - 1;
-      var indexs = this.selectedItems;
-      alert(indexs);
-      if(indexs.length>1){
-        alert("只能选择一条数据！");
-      }else if(indexs.length == 0){
-        alert("请选择一条数据！");
-      }else{
-        // this.formItem = this.users[indexs];
-        // this.formItem.disabled = false;
-        this.showModal = true;
-      }
-      
+    onPageSzieChanged(ps) {
+        console.log(ps);
+        this.reqParams.pageSize = ps;
+        this.getData();
     },
-    SelectAll() {
-      if (!this.checkAll) {
-        this.selectedItems = this.users.map(user => {
-          return user.id
-        })
-      } else {
-        this.selectedItems = []
-      }
-
+    onPageChanged(pn) {
+        console.log(pn);
+        this.reqParams.pageNum = pn;
+        this.getData();
     },
-    search (data, argumentObj) {
-        let res = data;
-        let dataClone = data;
-        for (let argu in argumentObj) {
-            if (argumentObj[argu].length > 0) {
-                res = dataClone.filter(d => {
-                    return d[argu].indexOf(argumentObj[argu]) > -1;
-                });
-                dataClone = res;
+    formatDate(date, fmt) {
+        if (/(y+)/.test(fmt)) {
+            fmt = fmt.replace(RegExp.$1, (date.getFullYear() + '').substr(4 - RegExp.$1.length));
+        }
+        let o = {
+            'M+': date.getMonth() + 1,
+            'd+': date.getDate(),
+            'h+': date.getHours(),
+            'm+': date.getMinutes(),
+            's+': date.getSeconds()
+        };
+        for (let k in o) {
+            if (new RegExp(`(${k})`).test(fmt)) {
+                let str = o[k] + '';
+                fmt = fmt.replace(RegExp.$1, (RegExp.$1.length === 1) ? str : this.padLeftZero(str));
             }
         }
-        return res;
+        return fmt;
     },
-    handleSearch3 () {
-        // if(this.searchConName3 == ''){
-        //   alert("请输入搜索条件");
-        // }
-        this.data3 = this.search(this.data3, {name: this.searchConName3});
-        console.log(this.searchLevel + '--' + this.searchConName3);
+    padLeftZero(str) {
+        return ('00' + str).substr(str.length);
     },
-    handleCancel3 () {
-        this.data3 = table.searchTable3;
+    getRegion(regionId){
+        let that = this;
+        let urlStr = "/ehrPwRegion/"+regionId;
+        axios
+            .get(urlStr,{})
+            .then(function(response) {
+                if (response.data) {
+                    that.regionName=response.data.pRgname;
+                }
+            })
+            .catch(function(error) {
+                console.log(error);
+            });
     },
+    modify(index) {
+        let that = this;
+        that.editItem = that.depts[index];
+        that.editModal = true;
+    },
+    cancelBtn(){
+        this.getData();
+    },
+    submitForm() {
+        let that = this;
+        let urlStr = "/ehrPwDept";
+        let user = Cookies.get("user");
+        // that.formItem.regionId="156737827659595778";
+        if (that.editItem.id) {
+            //修改
+             that.editItem.regionId=JSON.parse(user).regionId;
+             that.$refs['editItem'].validate((valid) => {
+                    if (valid) {
+                        axios
+                        .put(urlStr, that.editItem)
+                        .then(function(response) {
+                            console.log(response);
+                            if (response.data.code == 0) {
+                                that.getData();
+                                that.editModal=false;
+                                that.editItem.id="";
+                            } else {
+                                setTimeout(() => {
+                                    that.loading = false;
+                                    that.$nextTick(() => {
+                                        that.loading = true;
+                                    });
+                                }, 100);
+                            }
+                        })
+                        .catch(function(error) {
+                            console.log(error);
+                            setTimeout(() => {
+                                that.loading = false;
+                                that.$nextTick(() => {
+                                    that.loading = true;
+                                });
+                            }, 100);
+                        });
+                    }else{
+                        this.$Message.error('Fail!');
+                    }
+             });
+        } else {
+            //新建
+            that.formItem.status="1";
+            that.formItem.regionId=JSON.parse(user).regionId;
+            that.$refs['formItem'].validate((valid) => {
+                    if (valid) {
+                        axios
+                            .post(urlStr, that.formItem)
+                            .then(function(response) {
+                                if (response.data.code == 0) {
+                                    that.getData();
+                                    that.showModal=false;
+                                } else {
+                                    that.showModal=true;
+                                    setTimeout(() => {
+                                        that.loading = false;
+                                        that.$nextTick(() => {
+                                            that.loading = true;
+                                        });
+                                    }, 100);
+                                }
+                            })
+                            .catch(function(error) {
+                                console.log(error);
+                                setTimeout(() => {
+                                        that.loading = false;
+                                        that.$nextTick(() => {
+                                            that.loading = true;
+                                        });
+                                    }, 100);
+                            });
+                    } else {
+                        this.$Message.error('Fail!');
+                    }
+            });
+        }
+    }
   },
   created() {
+    let user = Cookies.get("user");
+    this.reqParams.regionId=JSON.parse(user).regionId;
+    // this.reqParams.regionId='156737827659595778';//测试用
+    this.getRegion(this.reqParams.regionId);
     this.getData();
   }
 };

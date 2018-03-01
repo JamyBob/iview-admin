@@ -1,43 +1,57 @@
-<style lang="less">
+<style scoped lang="less">
 @import "../../styles/common.less";
+@import './user.less';
+.clear {
+    display:block;
+    zoom:1;
+}
+.clear:after {
+    clear: both;
+    content:".";
+    display: block;
+    height: 0;
+    visibility: hidden;
+}
 </style>
 
 <template>
     <div class="access">
         <Row>
-            <Col span="12">
-            <Card>
+            <Col span="17">
+            <Card class="usermain">
                 <p slot="title">
                     <Icon type="android-contact"></Icon>
                     角色列表
                 </p>
                 <div class="access-user-con access-current-user-con">
-                    <div class="ivu-table ivu-table-border">
-                        <table style="width:100%;word-break: break-all;">
-                            <thead>
-                                <tr>
-                                    <th @click="oroleName?sysRoleReqParams.orderBy='roleName ASC':sysRoleReqParams.orderBy='roleName DESC';oroleName=!oroleName;getRolePermList();">角色名</th>
-                                    <th @click="oremark?sysRoleReqParams.orderBy='remark ASC':sysRoleReqParams.orderBy='remark DESC';oremark=!oremark;getRolePermList();">备注</th>
-                                </tr>
-                            </thead>
-                            <tbody>
-                                <tr v-for="item in roleList" @click="onRoleItemClick(item)">
-                                    <td>{{item.roleName}}</td>
-                                    <td>{{item.remark}}</td>
-                                </tr>
-                            </tbody>
-                        </table>
+                    <div class="ivu-table-wrapper">
+                        <div class="ivu-table ivu-table-border">
+                            <table cellpadding="0" cellspacing="0" style="width:100%;word-break: break-all;">
+                                <thead>
+                                    <tr>
+                                        <th @click="sysRoleReqParams.orderBy=oroleName?'roleName ASC':'roleName DESC';oroleName=!oroleName;getRoleList();">角色名</th>
+                                        <th @click="sysRoleReqParams.orderBy=oremark?'remark ASC':'remark DESC';oremark=!oremark;getRoleList();">备注</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    <tr v-for="item in roleList" @click="onRoleItemClick(item)">
+                                        <td>{{item.roleName}}</td>
+                                        <td>{{item.remark}}</td>
+                                    </tr>
+                                </tbody>
+                            </table>
+                        </div>
                     </div>
                 </div>
             </Card>
             </Col>
-            <Col span="12" class="padding-left-10">
-            <Card>
+            <Col span="7" class="padding-left-10">
+            <Card class="usermain">
                 <p slot="title">
                     <Icon type="android-contacts"></Icon>
-                    {{currentRole.roleName}}授权资源列表
+                    {{currentRole.roleName}} 授权资源列表
                 </p>
-                <div class="access-user-con access-change-access-con">
+                <div class="access-user-con access-change-access-con clear">
                     <Col span="24" class="padding-left-10">
                     <Row type="flex" justify="center" align="middle" class="access-change-access-con-row">
                         <Tree :data="permissionTree" @on-check-change="onTreeNodeCheck" show-checkbox multiple></Tree>
@@ -83,7 +97,7 @@ export default {
         },
         getRoleList() {
             let that = this;
-            return axios.get("/sysRole/all").then(function(response) {
+            return axios.get("/sysRole/all", { params: this.sysRoleReqParams }).then(function(response) {
                 if (response.data) {
                     that.roleList = response.data;
                 }
@@ -91,9 +105,8 @@ export default {
         },
         getRolePermList() {
             let that = this;
-            let urlStr = "/sysRolePermission/all";
             axios
-                .get(urlStr, { params: this.sysRoleReqParams })
+                .get("/sysRolePermission/all")
                 .then(function(response) {
                     if (response.data) {
                         that.rolePermList = response.data;
@@ -157,7 +170,7 @@ export default {
             //删除权限
             let removePermissions = [];
             for (let item of that.rolePermList) {
-                if (permissionIds.indexOf(item.permissionId) == -1) {
+                if (item.roleId== that.currentRole.id &&permissionIds.indexOf(item.permissionId) == -1) {
                     removePermissions.push(item);
                 }
             }

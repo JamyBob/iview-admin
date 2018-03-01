@@ -2,6 +2,17 @@
 <style scoped lang="less">
   @import '../../styles/common.less';
   @import './mentinfo.less';
+  .ivu-form-item{
+    width:50%;
+    float:left;
+    position: relative;
+    display: -webkit-box;
+    display: -webkit-flex;
+    display: flex;
+    -webkit-box-align: center;
+    -webkit-align-items: center;
+    align-items: center;
+  }
 </style>
 
 <template>
@@ -9,7 +20,7 @@
     <div class="usermain">
       <Row>
         <div class="userbtn">
-          <button type="button" class="ivu-btn-nobtn" @click="showModal = true; formItem={}"><img src="../../images/sys-step/user_add.png"><span>添加</span></button>
+          <button type="button" class="ivu-btn-nobtn" @click="showModal = true; message='新建机构'; isDisabled=false; parentShow=false"><img src="../../images/sys-step/user_add.png"><span>添加</span></button>
           <!-- <button type="button" class="ivu-btn-nobtn" @click="editModal"><img src="../../images/sys-step/user_edit.png"><span>修改</span></button> -->
           <!-- <button type="button" class="ivu-btn-nobtn"><img src="../../images/sys-step/user_export.png"><span>导出</span></button>
           <button type="button" class="ivu-btn-nobtn"><img src="../../images/sys-step/user_print.png"><span>打印</span></button> -->
@@ -23,9 +34,9 @@
               <Option v-for="item in articleStateList" :value="item.value" :key="item.value">{{ item.value }}</Option>
           </Select> -->
           <span class="label-name marin-left-5">机构编码</span>
-          <Input v-model="pRgid" placeholder="请输入机构编码" style="width: 200px" />
+          <Input clearable v-model="reqParams.pRgid" placeholder="请输入机构编码" style="width: 200px" /></Input>
           <span class="label-name marin-left-5">机构名称</span>
-          <Input v-model="pRgname" @keyup.enter.native="mechSearch" placeholder="请输入机构名称" style="width: 200px" />
+          <Input clearable v-model="reqParams.pRgname" @keyup.enter.native="mechSearch" placeholder="请输入机构名称" style="width: 200px" />
           <span @click="mechSearch" style="margin: 0 10px;"><Button type="primary">查询</Button></span>
           <!-- <Button @click="handleCancel3" type="ghost" >取消</Button> -->
         </div>
@@ -81,65 +92,175 @@
         </template> -->
         <template>
           <Table v-show="tableShow" class="mechtable" border ref="selection" :columns="columnslist" :data="resData.list" @on-selection-change="tableSelectChange"></Table>
-          <Page v-show="tableShow" style="float:right" :total="resData.pages*resData.size" :current="resData.pageNum" :page-size="reqParams.pageSize" :page-size-opts="pageSizeOpts" @on-change="onPageChanged" @on-page-size-change="onPageSzieChanged" show-elevator show-sizer></Page>
+          <Page v-show="tableShow" style="float:right" :total="resData.total" :current="resData.pageNum" :page-size="reqParams.ps" :page-size-opts="pageSizeOpts" @on-change="onPageChanged" @on-page-size-change="onPageSzieChanged" show-elevator show-sizer show-total></Page>
+          
         </template>
       </Row>
     </div>
-    <Modal v-model="showModal" @on-ok="submitForm" title="新建用户">
-        <Form :model="formItem" :label-width="80" >
-            <FormItem label="用户名">
-                <Input v-model="formItem.username" placeholder="名称" ></Input>
+    <Modal v-model="showModal" @on-ok="submitForm('mech')" :title="message" :loading="loading" width="620">
+        <!-- <p slot="header">
+            <span>{{message}}</span>
+        </p> -->
+        <Form ref='formItem' :model="formItem" :rules="ruleValidate" label-position="right" class="mechform clear">
+            <FormItem label="组织机构代码" prop="pRgid">
+                <Input clearable v-model="formItem.pRgid" :disabled="isDisabled" placeholder="组织机构代码"></Input>
             </FormItem>
-            <FormItem label="邮箱">
-                <Input v-model="formItem.email" placeholder="邮箱"></Input>
+            <FormItem label="机构名称" prop="pRgname">
+                <Input v-model="formItem.pRgname" :disabled="isDisabled" placeholder="名称" clearable></Input>
             </FormItem>
-            <FormItem label="手机">
-                <Input v-model="formItem.mobile" placeholder="手机"></Input>
+            <FormItem label="上级机构" v-show="parentShow">
+                <!-- <Select clearable v-model="formItem.parentId" :disabled="isDisabled" placeholder="上级机构名称">
+                  <Option v-for="item in parentRegionList" :value="item.id" :key="item.id">{{ item.pRgname }}</Option>
+                </Select> -->
+            <input type="hidden" v-model="formItem.parentId">
+            <AutoComplete
+                v-model="value2"
+                :filter-method="filterMethod"
+                :data="data2"
+                @on-select="handleSearch2"
+                :clearable="true"
+                :disabled="isDisabled"
+                placeholder="上级机构名称"
+                style="width:200px">
+            </AutoComplete>
+
             </FormItem>
-            <FormItem label="密码">
-                <Input v-model="formItem.password" placeholder="密码"></Input>
+            <FormItem label="机构负责人">
+                <Input v-model="formItem.pFunctionary" :disabled="isDisabled" placeholder="机构负责人" clearable></Input>
             </FormItem>
-            <FormItem label="所属部门">
-                <Select v-model="formItem.select">
-                    <Option value="beijing">New York</Option>
-                    <Option value="shanghai">London</Option>
-                    <Option value="shenzhen">Sydney</Option>
-                </Select>
+            <FormItem label="联系人">
+                <Input v-model="formItem.pContacts" :disabled="isDisabled" placeholder="联系人" clearable></Input>
             </FormItem>
-            <FormItem label="状态">
-                <RadioGroup v-model="formItem.status">
-                    <Radio label="0">未激活</Radio>
-                    <Radio label="1">激活</Radio>
-                    <Radio label="2">锁定</Radio>
+            <FormItem label="联系电话">
+                <Input v-model="formItem.pContactsTel" :disabled="isDisabled" placeholder="联系电话"></Input>
+            </FormItem>
+            <FormItem label="机构等级" prop="pRglevel">
+                <!-- <Select clearable v-model="formItem.pRglevel" :disabled="isDisabled" placeholder="请选择机构级别">
+                  <Option v-for="item in pRglevelDictList" :value="item.id" :key="item.id">{{ item.pFunDesc }}</Option>
+                </Select> -->
+
+                <input type="hidden" v-model="formItem.pRglevel">
+                <AutoComplete
+                    v-model="valuePrglevel"
+                    :filter-method="filterMethodPrglevel"
+                    :data="pRglevelDictListData"
+                    @on-select="handleSearchPrglevel"
+                    :clearable="true"
+                    :disabled="isDisabled"
+                    placeholder="请选择机构级别"
+                    style="width:200px">
+                </AutoComplete>
+
+            </FormItem>
+            <FormItem label="机构经济类型">
+                <!-- <Select clearable v-model="formItem.pEcocode" :disabled="isDisabled" placeholder="请选择机构经济类型">
+                  <Option v-for="item in pEcocodeDictList" :value="item.id" :key="item.id">{{ item.pFunDesc }}</Option>
+                </Select> -->
+
+                <input type="hidden" v-model="formItem.pEcocode">
+                <AutoComplete
+                    v-model="valuePecocode"
+                    :filter-method="filterMethodPecocode"
+                    :data="pEcocodeDictListData"
+                    @on-select="handleSearchPecocode"
+                    :clearable="true"
+                    :disabled="isDisabled"
+                    placeholder="请选择机构经济类型"
+                    style="width:200px">
+                </AutoComplete>
+            </FormItem>
+            <FormItem label="区域代码">
+                <!-- <Select clearable v-model="formItem.areacode" :disabled="isDisabled" placeholder="请选择机构区域代码">
+                  <Option v-for="item in areacodeList" :value="item.id" :key="item.id">{{ item.areaname }}</Option>
+                </Select> -->
+
+                <input type="hidden" v-model="formItem.areacode">
+                <AutoComplete
+                    v-model="valueareacode"
+                    :filter-method="filterMethodareacode"
+                    :data="areacodeListData"
+                    @on-select="handleSearchareacode"
+                    :clearable="true"
+                    :disabled="isDisabled"
+                    placeholder="请选择机构区域代码"
+                    style="width:200px">
+                </AutoComplete>
+            </FormItem>
+            <FormItem label="机构类型">
+                <!-- <Select clearable v-model="formItem.pRgtype" :disabled="isDisabled" placeholder="请选择机构类型" @on-change="">
+                  <Option v-for="item in pRgtypeDictList" :value="item.id" :key="item.id">{{ item.pFunDesc }}</Option>
+                </Select> -->
+
+                <input type="hidden" v-model="formItem.pRgtype">
+                <AutoComplete
+                    v-model="valuePrgtype"
+                    :filter-method="filterMethodPrgtype"
+                    :data="pRgtypeDictListData"
+                    @on-select="handleSearchPrgtype"
+                    :clearable="true"
+                    :disabled="isDisabled"
+                    placeholder="请选择机构类型"
+                    style="width:200px">
+                </AutoComplete>
+            </FormItem>
+            <FormItem label="机构地址">
+                <Input v-model="formItem.pAddress" :disabled="isDisabled" placeholder="机构详细地址" clearable></Input>
+            </FormItem>
+            <FormItem label="面积">
+                <Input v-model="formItem.pArea" :disabled="isDisabled" placeholder="面积（平方公里）" clearable></Input>
+            </FormItem>
+
+            <FormItem label="邮政编码">
+                <Input v-model="formItem.pPost" :disabled="isDisabled" placeholder="邮政编码" clearable></Input>
+            </FormItem>
+            <FormItem label="城镇人口数">
+                <Input v-model="formItem.pCityPopnum" :disabled="isDisabled" placeholder="城镇人口数" clearable></Input>
+            </FormItem>
+            <FormItem label="农村人口数">
+                <Input v-model="formItem.pRuralPopnum" :disabled="isDisabled" placeholder="农村人口数" clearable></Input>
+            </FormItem>
+            <!-- <FormItem label="人口数更新时间">
+                <Date-picker v-model="formItem.pPopupdateTime" type="date" :disabled="isDisabled" placeholder="选择日期"></Date-picker>
+            </FormItem> -->
+            <FormItem label="社区卫生服务机构从业人数">
+                <Input v-model="formItem.pWorkPopnum" :disabled="isDisabled" placeholder="社区卫生服务机构从业人数" clearable></Input>
+            </FormItem>
+            <FormItem label="正式编制人员">
+                <Input v-model="formItem.pOfficialStaffing" :disabled="isDisabled" placeholder="正式编制人员" clearable></Input>
+            </FormItem>
+            <FormItem label="全科医师">
+                <Input v-model="formItem.pGeneralPractitioner" :disabled="isDisabled" placeholder="全科医师" clearable></Input>
+            </FormItem>
+            <FormItem label="临床执业医师数">
+                <Input v-model="formItem.pClinicNum" :disabled="isDisabled" placeholder="临床执业医师数" clearable></Input>
+            </FormItem>
+            <FormItem label="公共卫生医师数">
+                <Input v-model="formItem.pPubhealthNum" :disabled="isDisabled" placeholder="公共卫生医师数" clearable></Input>
+            </FormItem>
+            <FormItem label="其他人员">
+                <Input v-model="formItem.pOtherNum" :disabled="isDisabled" placeholder="其他人员" clearable></Input>
+            </FormItem>
+            <!-- <FormItem label="状态" v-show="false">
+                <RadioGroup v-model="formItem.status" >
+                    <Radio label="0" value="0" :disabled="isDisabled">停用</Radio>
+                    <Radio label="1" value="1" :disabled="isDisabled">启用</Radio>
                 </RadioGroup>
-            </FormItem>
-            <FormItem label="角色">
-                <CheckboxGroup v-model="formItem.checkbox">
-                    <Checkbox label="Eat">管理员</Checkbox>
-                    <Checkbox label="Sleep">用户</Checkbox>
-                    <Checkbox label="Run">部门经理</Checkbox>
-                    <Checkbox label="Movie">临时用户</Checkbox>
-                </CheckboxGroup>
-            </FormItem>
-            <FormItem label="备注">
-                <Input v-model="formItem.comment" type="textarea" :autosize="{minRows: 2,maxRows: 5}" placeholder="备注"></Input>
-            </FormItem>
-            <div class="binding" data-title="绑定账号">
+            </FormItem> -->
+            <!-- <div class="binding" data-title="绑定账号">
               <div class="bindingbtn">
                 <input type="text" v-model="city"/>
               </div>
               <div v-show="isshow">
                 <p v-for="item in selectCitys" @click="bindcity(item)">{{item}}</p>
               </div>
-            </div>
+            </div> -->
         </Form>
     </Modal>
   </div>
 </template>
-
 <script>
 import axios from "axios";
-import * as table from '../tables/data/search';
+// import * as table from '../tables/data/search';
 import TreeGrid from '../main-components/TreeGrid';
 export default {
   name: "mech-info",
@@ -152,13 +273,13 @@ export default {
       tableShow: false,
       showModal: false,
       formItem: {
+        status: "0",
         disabled: false,
         username: "",
         email: "",
         mobile: "",
         password: "",
         select: "",
-        status: "0",
         checkbox: [],
         switch: true,
         comment: ""
@@ -279,7 +400,6 @@ export default {
                   on: {
                     click: () => {
                       // this.show(params.index);
-                      console.log(params.row.status);
                       this.modify(params.row.id,'0');
                     }
                   }
@@ -298,7 +418,6 @@ export default {
                     click: () => {
                       let that = this;
                       // this.show(params.index);
-                      console.log("352532523532"+params.row.status);
                       this.modify(params.row.id,'1');
                     }
                   }
@@ -327,7 +446,7 @@ export default {
                   },
                   on: {
                     click: () => {
-                      this.show(params.index);
+                      this.showRegion(params.row.id);
                     }
                   }
                 },
@@ -342,7 +461,7 @@ export default {
                   },
                   on: {
                     click: () => {
-                      this.modify(params.index);
+                      this.modifyRegion(params.row.id);
                     }
                   }
                 },
@@ -351,19 +470,46 @@ export default {
             ]);
           }
       }],
-      reqParams: { keyword: "", pageNum: 1, pageSize: 15, orderBy: "" },
+      reqParams: { pRgid: "",pRgname:"", pn: 1, ps: 10, orderBy: "" },
       resData: { list: [], pageNum: 0, size: 0 },
-      pageSizeOpts: [15, 30, 45],
+      pageSizeOpts: [10, 20, 50],
       regions: [],
       checkAll: false,
       selectedItems: [],
-      isshow:true,
+      isshow:false,
       city:"",
-      citys:['北京','北海','东北','上海','武汉','东京','广州','广元市','上饶','上水市'],
+      citys:[],
+      products:[],
+      search:'',
       selectCitys:[],
       pRgid: '',
       pRgname: '',
+      parentShow:'',
+      value2: '',
+      valuePrglevel:'',
+      valuePecocode:'',
+      valueareacode:'',
+      valuePrgtype:'',
       statust: '',
+      pRglevelDictList:[],
+      pEcocodeDictList:[],
+      pRgtypeDictList:[],
+      areacodeList:[],
+      parentRegionList:[],
+      message: '',
+      isDisabled: false,
+      loading: true,
+      ruleValidate:{
+        pRgid:[
+          {required: true, message:'组织机构代码不能为空！', trigger: 'blur'},
+        ],
+        pRgname:[
+          {required: true, message:'机构名称不能为空！', trigger: 'blur'},
+        ],
+        // pRglevel:[
+        //   {required: true, message:'请选择机构等级！', trigger: 'change'},
+        // ],
+      }
     }
   },
   methods: {
@@ -376,7 +522,7 @@ export default {
         })
         .then(function(response) {
           if (response.data) {
-            console.log(response.data);
+            //onsole.log(response.data);
             that.regions = response.data.result;
           }
         })
@@ -386,15 +532,15 @@ export default {
     },
     submitForm() {
       let that = this;
-      let urlStr = "/sysUser";
+      let urlStr = "/ehrPwRegion/addRegion";
       if (this.formItem.id) {
         //修改
+        // that.formTitle = '修改机构';
         axios
-          .put(urlStr, this.formItem)
+          .post(urlStr, this.formItem)
           .then(function(response) {
-            console.log(response);
             if (response.data.code == 0) {
-              that.getData();
+              that.mechSearch();
             } else {
             }
           })
@@ -403,19 +549,38 @@ export default {
           });
       } else {
         //新建
-        axios
-          .post(urlStr, this.formItem)
-          .then(function(response) {
-            // console.log(response);
-            if (response.data.code == 0) {
-              that.getData();
+        that.$refs['formItem'].validate((valid) => {
+            if (valid) {
+                axios
+                .post(urlStr, this.formItem)
+                .then(function(response) {
+                  // console.log(response);
+                  // that.showModal = true;
+                  if (response.data.code == 0) {
+                      //alert(222);
+                      that.showModal = false;
+                  }else {
+                      // that.showModal=true;
+                      alert(111);
+                  }
+                })
+                .catch(function(error) {
+                  // console.log(error);
+                  //that.showModal = true;
+                });
             } else {
+                setTimeout(() => {
+                    this.loading = false;
+                    this.$nextTick(() => {
+                        this.loading = true;
+                    });
+                }, 1000);
             }
-          })
-          .catch(function(error) {
-            console.log(error);
-          });
+        })
+
+        
       }
+
     },
     editModal(){
       var index = this.selectedItems - 1;
@@ -442,26 +607,27 @@ export default {
       }
 
     },
-    search (data, argumentObj) {
-        let res = data;
-        let dataClone = data;
-        for (let argu in argumentObj) {
-            if (argumentObj[argu].length > 0) {
-                res = dataClone.filter(d => {
-                    return d[argu].indexOf(argumentObj[argu]) > -1;
-                });
-                dataClone = res;
-            }
-        }
-        return res;
-    },
+    // search (data, argumentObj) {
+    //     let res = data;
+    //     let dataClone = data;
+    //     for (let argu in argumentObj) {
+    //         if (argumentObj[argu].length > 0) {
+    //             res = dataClone.filter(d => {
+    //                 return d[argu].indexOf(argumentObj[argu]) > -1;
+    //             });
+    //             dataClone = res;
+    //         }
+    //     }
+    //     return res;
+    // },
     mechSearch () {
         // if(this.searchConName3 == ''){
         //   alert("请输入搜索条件");
         // }
+        
         let that = this;
         let urlStr = "/ehrPwRegion/page";
-        if(this.pRgid == ''&&this.pRgname == ''){
+        if(this.reqParams.pRgid == ''&&this.reqParams.pRgname == ''){
           this.treeShow = true;
           this.tableShow = false;
         }else{
@@ -469,11 +635,11 @@ export default {
           this.tableShow = true;
           axios
           .get(urlStr, {
-            params: { pRgid: this.pRgid, pRgname: this.pRgname, }
+            params: that.reqParams
           })
           .then(function(response) {
             if (response.data) {
-              console.log(response.data);
+              //console.log(response.data);
               that.resData = response.data;
             }
           })
@@ -487,37 +653,44 @@ export default {
         this.data3 = table.searchTable3;
     },
     bindcity(val){
-      alert(val);
-      this.city = val;
+      // alert(val);
+      let that = this;
+      that.isshow = false;
+      this.search = val.areacode;
+      //console.log(val);
     },
     rowClick(data, index, event, text) {
-        console.log('当前行数据:' + data.status)
-        console.log('点击行号:' + index)
-        console.log('点击事件:' + event)
-        // console.log(text)
+        // console.log('当前行数据:' + data.status)
+        // console.log('点击行号:' + index)
+        // console.log('点击事件:' + event)
+        //  console.log(data.id);
         // this.getData();
         // console.log(that.statust)
+        if(text == '查看'){
+          this.showRegion(data.id);
+        }else if(text == '编辑'){
+          this.modifyRegion(data.id);
+        }
     },
     selectionClick(arr) {
-        console.log('选中数据id数组:' + arr)
+        //('选中数据id数组:' + arr)
     },
     sortClick(key, type) {
-        console.log('排序字段:' + key)
-        console.log('排序规则:' + type)
+        //('排序字段:' + key)
+        //console.log('排序规则:' + type)
     },
     tableSelectChange(items) {
         this.selectedItems = items;
     },
     onPageSzieChanged(pageSize) {
-        this.reqParams.pageSize = pageSize;
-        this.getData();
+        this.reqParams.ps = pageSize;
+        this.mechSearch();
     },
     onPageChanged(pageNum) {
-        this.reqParams.pageNum = pageNum;
-        this.getData();
+        this.reqParams.pn = pageNum;
+        this.mechSearch();
     },
     modify(id,status) {
-      console.log(id +"----"+ status);
       let that = this;
       let urlStr = "/ehrPwRegion/updateRegionById";
           axios({
@@ -529,38 +702,287 @@ export default {
             
             
           }).then(function(response){
-              console.log(response.data);
+              //console.log(response.data);
+
               if(response.data.code == '0'){
                  that.mechSearch();
-                 // if(status == '0'){
-                 //  that.btn.text = '123';
-                 // }
               }
             })
             .catch(function(error){
               console.log(error);
             })
+
+    },
+    showRegion(regionId) {
+      let that = this;
+      
+      let urlStr = "/ehrPwRegion/"+regionId;
+          axios({
+            method:'get',
+            url:urlStr,
+            params:{},
+            
+            
+          }).then(function(response){
+              console.log("232---"+response.data);
+              that.formItem = response.data;
+              that.showModal = true;
+              that.message = '查看机构';
+              that.isDisabled = true;
+            })
+            .catch(function(error){
+              console.log(error);
+            })
+
+    },
+    modifyRegion(regionId) {
+      this.parentShow = true;
+      let that = this;
+      
+      let urlStr = "/ehrPwRegion/"+regionId;
+          axios({
+            method:'get',
+            url:urlStr,
+            params:{},
+            
+          }).then(function(response){
+              //console.log("232---"+response.data);
+              that.formItem = response.data;
+              that.showModal = true;
+              that.message = '修改机构';
+              that.isDisabled = false;
+              // that.formTitle = '修改机构';
+            })
+            .catch(function(error){
+              console.log(error);
+            })
+
+    },
+    getpRglevel() {
+      let that = this;
+      let urlStr = "/ehrPwRegionDict/getDictByCodeBus";
+          axios({
+            method:'get',
+            url:urlStr,
+            params:{
+              pCode: "00002",
+            },
+            
+            
+          }).then(function(response){
+
+              if(response.data.code == '0'){
+                //console.log("prglevelDict==="+JSON.stringify(response.data.result))
+                 that.pRglevelDictList = response.data.result;
+              }
+            })
+            .catch(function(error){
+              console.log(error);
+            })
+
+    },getpEcocode() {
+      let that = this;
+      let urlStr = "/ehrPwRegionDict/getDictByCodeBus";
+          axios({
+            method:'get',
+            url:urlStr,
+            params:{
+              pCode: "00004",
+            },
+            
+            
+          }).then(function(response){
+              //console.log(response.data);
+
+              if(response.data.code == '0'){
+                 that.pEcocodeDictList = response.data.result;
+              }
+            })
+            .catch(function(error){
+              console.log(error);
+            })
+
+    },
+    getpRgtype() {
+      let that = this;
+      let urlStr = "/ehrPwRegionDict/getDictByCodeBus";
+          axios({
+            method:'get',
+            url:urlStr,
+            params:{
+              pCode: "00001",
+            },
+            
+            
+          }).then(function(response){
+              //console.log(response.data);
+
+              if(response.data.code == '0'){
+                 that.pRgtypeDictList = response.data.result;
+              }
+            })
+            .catch(function(error){
+              console.log(error);
+            })
+
+    },getAreaCode() {
+      let that = this;
+      let urlStr = "/ehrPwRegion/getLowerAreaList";
+          axios({
+            method:'get',
+            url:urlStr,
+            
+          }).then(function(response){
+              if(response.data.code == '0'){
+                let data = response.data.result;
+                //console.log(data);
+                 that.areacodeList = data;
+              }
+            })
+            .catch(function(error){
+              console.log(error);
+            })
+
+    },getParentRegion() {
+      let that = this;
+      let urlStr = "/ehrPwRegion/getSLRegion";
+          axios({
+            method:'get',
+            url:urlStr,
+            
+          }).then(function(response){
+              if(response.data.code == '0'){
+                //console.log("parentRegionList="+JSON.stringify(response.data.result));
+                 that.parentRegionList = response.data.result;
+              }
+            })
+            .catch(function(error){
+              console.log(error);
+            })
+
+    },
+    filterMethod (value, option) {
+        return option.indexOf(value.toUpperCase()) !== -1;
+    },handleSearch2 (value) {
+        for(let i=0;i<this.parentRegionList.length;i++){
+          if(value == this.parentRegionList[i].pRgname){
+            this.formItem.parentId = this.parentRegionList[i].pRgid;
+            break;
+          }
+        }
+    },
+    handleSearchPrglevel(value){
+      for(let i=0;i<this.pRglevelDictList.length;i++){
+            if(value == this.pRglevelDictList[i].pFunDesc){
+              this.formItem.pRglevel = this.pRglevelDictList[i].id;
+              break;
+            }
+          }
+    },filterMethodPrglevel (value, option) {
+        return option.indexOf(value.toUpperCase()) !== -1;
+    },filterMethodPecocode (value, option) {
+        return option.indexOf(value.toUpperCase()) !== -1;
+    },filterMethodareacode (value, option) {
+        return option.indexOf(value.toUpperCase()) !== -1;
+    },filterMethodPrgtype (value, option) {
+        return option.indexOf(value.toUpperCase()) !== -1;
+    },handleSearchPecocode(value){
+      for(let i=0;i<this.pEcocodeDictList.length;i++){
+            if(value == this.pEcocodeDictList[i].pFunDesc){
+              this.formItem.pEcocode = this.pEcocodeDictList[i].id;
+              break;
+            }
+          }
+    },handleSearchareacode(value){
+      for(let i=0;i<this.areacodeList.length;i++){
+            if(value == this.areacodeList[i].areaname){
+              this.formItem.areacode = this.areacodeList[i].id;
+              break;
+            }
+          }
+    },handleSearchPrgtype(value){
+      for(let i=0;i<this.pRgtypeDictList.length;i++){
+            if(value == this.pRgtypeDictList[i].pFunDesc){
+              this.formItem.pRgtype = this.pRgtypeDictList[i].id;
+              break;
+            }
+          }
     },
 
+
   },
-  watch:{
-    city:function(val, oldVal){
-      if(val.length==0){
-         this.isshow = false
-       }else{
-          this.isshow = true;
-          var citys = []
-          this.citys.forEach((item,index) => {
-              if(item.indexOf(val)>=0){
-                  citys.unshift(item)
-              }
-          })  
-          this.selectCitys = citys;
-       }
+  computed:{
+    data2:function(){
+      let result = [];
+      for(let i=0;i<this.parentRegionList.length;i++){
+        let parent = this.parentRegionList[i];
+        result[i] = parent.pRgname;
+      }
+      return result;
+    },
+    pRglevelDictListData:function(){
+      let result = [];
+      for(let i=0;i<this.pRglevelDictList.length;i++){
+        let dict = this.pRglevelDictList[i];
+        result[i] = dict.pFunDesc;
+      }
+      return result;
+    },
+    pEcocodeDictListData:function(){
+      let result = [];
+      for(let i=0;i<this.pEcocodeDictList.length;i++){
+        let dict = this.pEcocodeDictList[i];
+        result[i] = dict.pFunDesc;
+      }
+      return result;
+    },
+    areacodeListData:function(){
+      let result = [];
+      for(let i=0;i<this.areacodeList.length;i++){
+        let dict = this.areacodeList[i];
+        result[i] = dict.areaname;
+      }
+      return result;
+    },
+    pRgtypeDictListData:function(){
+      let result = [];
+      for(let i=0;i<this.pRgtypeDictList.length;i++){
+        let dict = this.pRgtypeDictList[i];
+        result[i] = dict.pFunDesc;
+      }
+      return result;
     }
   },
+  // watch:{
+  //   city:function(val){
+  //     // console.log(citys);
+  //     if(val.length==0){
+  //        this.isshow = false
+  //      }else{
+  //         this.isshow = true;
+  //         var citys = []
+  //         this.citys.forEach((item,index) => {
+  //           // console.log("item"+item);
+  //           // // item = JSON.stringify(item);
+  //           //  console.log("item说是"+JSON.stringify(item));
+  //           // let showItem = item.areaname;
+  //           // console.log("showItem=="+showItem);
+  //             if(item.indexOf(val)>=0){
+  //                 citys.unshift(item)
+  //             }
+  //         })  
+  //         this.selectCitys = citys;
+  //      }
+  //   }
+  // },
   created() {
     this.getData();
+    this.getpRglevel();
+    this.getpEcocode();
+    this.getpRgtype();
+    this.getAreaCode();
+    this.getParentRegion();
   }
 };
+
 </script>
